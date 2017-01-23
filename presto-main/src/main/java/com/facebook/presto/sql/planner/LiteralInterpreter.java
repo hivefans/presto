@@ -93,7 +93,7 @@ public final class LiteralInterpreter
     {
         requireNonNull(objects, "objects is null");
         requireNonNull(types, "types is null");
-        checkArgument(objects.size() == types.size(), "objects and types do not have the same size");
+        // checkArgument(objects.size() == types.size(), "objects and types do not have the same size");
 
         ImmutableList.Builder<Expression> expressions = ImmutableList.builder();
         for (int i = 0; i < objects.size(); i++) {

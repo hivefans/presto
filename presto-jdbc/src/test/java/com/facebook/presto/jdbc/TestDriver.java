@@ -160,10 +160,13 @@ public class TestDriver
                         ", DECIMAL '1234567890.1234567' _decimal_short" +
                         ", DECIMAL '.12345678901234567890123456789012345678' _decimal_long" +
                         ", approx_set(42) _hll" +
-                        ", cast('foo' as char(5)) _char")) {
+                        ", cast('foo' as char(5)) _char" +
+                        ", SMALLINT '123' _smallint" +
+                        ", TINYINT '123' _tinyint" +
+                        ", REAL '123' _real")) {
                     ResultSetMetaData metadata = rs.getMetaData();
 
-                    assertEquals(metadata.getColumnCount(), 10);
+                    assertEquals(metadata.getColumnCount(), 13);
 
                     assertEquals(metadata.getColumnLabel(1), "_integer");
                     assertEquals(metadata.getColumnType(1), Types.INTEGER);
@@ -194,6 +197,15 @@ public class TestDriver
 
                     assertEquals(metadata.getColumnLabel(10), "_char");
                     assertEquals(metadata.getColumnType(10), Types.CHAR);
+
+                    assertEquals(metadata.getColumnLabel(11), "_smallint");
+                    assertEquals(metadata.getColumnType(11), Types.SMALLINT);
+
+                    assertEquals(metadata.getColumnLabel(12), "_tinyint");
+                    assertEquals(metadata.getColumnType(12), Types.TINYINT);
+
+                    assertEquals(metadata.getColumnLabel(13), "_real");
+                    assertEquals(metadata.getColumnType(13), Types.REAL);
 
                     assertTrue(rs.next());
 
@@ -258,6 +270,27 @@ public class TestDriver
                     assertEquals(rs.getObject("_char"), "foo  ");
                     assertEquals(rs.getString(10), "foo  ");
                     assertEquals(rs.getString("_char"), "foo  ");
+
+                    assertEquals(rs.getObject(11), new Short("123"));
+                    assertEquals(rs.getObject("_smallint"), new Short("123"));
+                    assertEquals(rs.getInt(11), 123);
+                    assertEquals(rs.getInt("_smallint"), 123);
+                    assertEquals(rs.getLong(11), 123L);
+                    assertEquals(rs.getLong("_smallint"), 123L);
+
+                    assertEquals(rs.getObject(12), new Byte("123"));
+                    assertEquals(rs.getObject("_tinyint"), new Byte("123"));
+                    assertEquals(rs.getInt(12), 123);
+                    assertEquals(rs.getInt("_tinyint"), 123);
+                    assertEquals(rs.getLong(12), 123L);
+                    assertEquals(rs.getLong("_tinyint"), 123L);
+
+                    assertEquals(rs.getObject(13), new Float("123"));
+                    assertEquals(rs.getObject("_real"), new Float("123"));
+                    assertEquals(rs.getInt(13), 123);
+                    assertEquals(rs.getInt("_real"), 123);
+                    assertEquals(rs.getLong(13), 123L);
+                    assertEquals(rs.getLong("_real"), 123L);
 
                     assertFalse(rs.next());
                 }

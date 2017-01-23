@@ -14,6 +14,7 @@
 package com.facebook.presto.jdbc;
 
 import com.facebook.presto.server.testing.TestingPrestoServer;
+import com.facebook.presto.spi.type.VarcharType;
 import io.airlift.log.Logging;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -31,6 +32,8 @@ import java.sql.Statement;
 import java.sql.Types;
 
 import static com.facebook.presto.jdbc.TestDriver.closeQuietly;
+import static com.facebook.presto.spi.type.VarcharType.createUnboundedVarcharType;
+import static com.facebook.presto.spi.type.VarcharType.createVarcharType;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -92,6 +95,11 @@ public class TestJdbcResultSet
         }
     }
 
+    @Test
+    public void testPrestoCreatedJDBCVarchar()
+    {
+    }
+
     @SuppressWarnings("UnnecessaryBoxing")
     @Test
     public void testObjectTypes()
@@ -122,6 +130,7 @@ public class TestJdbcResultSet
             assertEquals(rs.getObject(7), Double.POSITIVE_INFINITY);
             assertEquals(rs.getObject(8), Double.NaN);
             assertEquals(rs.getArray(9).getArray(), new int[] {1, 2});
+            assertEquals(rs.getArray(9).getArray(1, 1), new int[] {1});
             assertEquals(rs.getObject(10), "foo  ");
         }
     }
