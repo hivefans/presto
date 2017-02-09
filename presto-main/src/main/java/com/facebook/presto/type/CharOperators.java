@@ -13,6 +13,7 @@
  */
 package com.facebook.presto.type;
 
+import com.facebook.presto.spi.PrestoException;
 import com.facebook.presto.spi.function.IsNull;
 import com.facebook.presto.spi.function.LiteralParameters;
 import com.facebook.presto.spi.function.ScalarOperator;
@@ -21,16 +22,10 @@ import com.facebook.presto.spi.type.StandardTypes;
 import io.airlift.slice.Slice;
 import io.airlift.slice.XxHash64;
 
-import static com.facebook.presto.spi.function.OperatorType.BETWEEN;
-import static com.facebook.presto.spi.function.OperatorType.EQUAL;
-import static com.facebook.presto.spi.function.OperatorType.GREATER_THAN;
-import static com.facebook.presto.spi.function.OperatorType.GREATER_THAN_OR_EQUAL;
-import static com.facebook.presto.spi.function.OperatorType.HASH_CODE;
-import static com.facebook.presto.spi.function.OperatorType.IS_DISTINCT_FROM;
-import static com.facebook.presto.spi.function.OperatorType.LESS_THAN;
-import static com.facebook.presto.spi.function.OperatorType.LESS_THAN_OR_EQUAL;
-import static com.facebook.presto.spi.function.OperatorType.NOT_EQUAL;
+import static com.facebook.presto.spi.StandardErrorCode.INVALID_CAST_ARGUMENT;
+import static com.facebook.presto.spi.function.OperatorType.*;
 import static com.facebook.presto.spi.type.Chars.compareChars;
+import static java.lang.String.format;
 
 public final class CharOperators
 {
@@ -90,6 +85,19 @@ public final class CharOperators
     public static boolean between(@SqlType("char(x)") Slice value, @SqlType("char(x)") Slice min, @SqlType("char(x)") Slice max)
     {
         return compareChars(min, value) <= 0 && compareChars(value, max) <= 0;
+    }
+
+    @LiteralParameters("x")
+    @ScalarOperator(CAST)
+    @SqlType(StandardTypes.BIGINT)
+    public static long castToBigint(@SqlType("char(x)") Slice slice)
+    {
+        try {
+            return Long.parseLong(slice.toStringUtf8());
+        }
+        catch (Exception e) {
+            throw new PrestoException(INVALID_CAST_ARGUMENT, format("Can not cast '%s' to BIGINT", slice.toStringUtf8()));
+        }
     }
 
     @LiteralParameters("x")

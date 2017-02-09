@@ -74,6 +74,16 @@ public class TestPostgreSqlIntegrationSmokeTest
         execute("DROP MATERIALIZED VIEW tpch.test_mv");
     }
 
+    @Test
+    public void testCast()
+            throws Exception
+    {
+        execute("CREATE TABLE tpch.test_cast (x char(2))");
+        assertUpdate("INSERT INTO test_cast SELECT cast('-1' as char(2))", 1);
+        assertQuery("SELECT cast(x as BIGINT) FROM test_cast", "SELECT -1 x");
+        assertUpdate("DROP TABLE test_cast");
+    }
+
     private void execute(String sql)
             throws SQLException
     {
