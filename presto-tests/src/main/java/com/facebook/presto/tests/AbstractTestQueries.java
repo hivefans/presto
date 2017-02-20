@@ -217,6 +217,12 @@ public abstract class AbstractTestQueries
     }
 
     @Test
+    public void testLambdaWithGroupBy()
+    {
+        assertQuery("SELECT filter(v, x -> true) FROM (VALUES null) t(v) GROUP BY filter(v, x -> true)", "SELECT null");
+    }
+
+    @Test
     public void testTryLambdaRepeated()
     {
         assertQuery("SELECT x + x FROM (SELECT apply(a, i -> i * i) x FROM (VALUES 3) t(a))", "SELECT 18");
