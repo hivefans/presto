@@ -219,7 +219,9 @@ public abstract class AbstractTestQueries
     @Test
     public void testLambdaWithGroupBy()
     {
-        assertQuery("SELECT filter(v, x -> true) FROM (VALUES null) t(v) GROUP BY filter(v, x -> true)", "SELECT null");
+        assertQuery("SELECT apply(x, i -> i * i) FROM (SELECT 10 x) GROUP BY apply(x, i -> i * i)", "SELECT 100"); // failed case (left x in SELECT is extracted, but right x in GROUP BY isn't extracted)
+//        assertQuery("SELECT apply(10, i -> i * i) FROM (SELECT 10 x) GROUP BY apply(10, i -> i * i)", "SELECT 100"); // success case
+//        assertQuery("SELECT apply(x, i -> i * i) FROM (SELECT 10 x) GROUP BY 1", "SELECT 100"); // success case
     }
 
     @Test
