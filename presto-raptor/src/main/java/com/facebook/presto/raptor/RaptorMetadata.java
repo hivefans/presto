@@ -62,6 +62,7 @@ import javax.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -467,6 +468,27 @@ public class RaptorMetadata
         RaptorColumnHandle sourceColumn = (RaptorColumnHandle) source;
         daoTransaction(dbi, MetadataDao.class, dao -> {
             dao.renameColumn(table.getTableId(), sourceColumn.getColumnId(), target);
+            dao.updateTableVersion(table.getTableId(), session.getStartTime());
+        });
+    }
+
+    @Override
+    public void dropColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle column)
+    {
+        RaptorTableHandle table = (RaptorTableHandle) tableHandle;
+        RaptorColumnHandle raptorColumn = (RaptorColumnHandle) column;
+
+        List<TableColumn> existingColumns = dao.listTableColumns(table.getSchemaName(), table.getTableName());
+        if (existingColumns.size() == 1) {
+            throw new PrestoException(NOT_SUPPORTED, "Dropping last column is not supported");
+        }
+        long maxColumnId = existingColumns.stream().map(s -> s.getColumnId()).max(Comparator.comparing(i -> i)).get();
+        if (raptorColumn.getColumnId() == maxColumnId) {
+            throw new PrestoException(NOT_SUPPORTED, "Dropping last column is not supported");
+        }
+
+        daoTransaction(dbi, MetadataDao.class, dao -> {
+            dao.dropColumn(table.getTableId(), raptorColumn.getColumnId());
             dao.updateTableVersion(table.getTableId(), session.getStartTime());
         });
     }
