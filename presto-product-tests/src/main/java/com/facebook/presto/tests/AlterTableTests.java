@@ -96,4 +96,30 @@ public class AlterTableTests
         assertThat(() -> query(format("ALTER TABLE %s ADD COLUMN n_naTioNkEy BIGINT", TABLE_NAME)))
                 .failsWithMessage("Column 'n_naTioNkEy' already exists");
     }
+
+    @Test(groups = {ALTER_TABLE, SMOKE})
+    public void dropColumn()
+    {
+        query(format("CREATE TABLE %s AS SELECT * FROM nation", TABLE_NAME));
+
+        assertThat(query(format("ALTER TABLE %s DROP COLUMN n_nationkey", TABLE_NAME), UPDATE))
+                .hasRowsCount(1);
+        assertThat(query(format("SELECT * FROM %s", TABLE_NAME)))
+                .hasColumnsCount(3);
+        assertThat(() -> query(format("ALTER TABLE %s DROP COLUMN n_nationkey", TABLE_NAME)))
+                .failsWithMessage("Column 'n_nationkey' does not exist");
+
+        assertThat(query(format("ALTER TABLE %s DROP COLUMN n_name", TABLE_NAME), UPDATE))
+                .hasRowsCount(1);
+        assertThat(query(format("SELECT * FROM %s", TABLE_NAME)))
+                .hasColumnsCount(2);
+
+        assertThat(query(format("ALTER TABLE %s DROP COLUMN n_regionkey", TABLE_NAME), UPDATE))
+                .hasRowsCount(1);
+        assertThat(query(format("SELECT * FROM %s", TABLE_NAME)))
+                .hasColumnsCount(1);
+
+        assertThat(() -> query(format("ALTER TABLE %s DROP COLUMN n_comment", TABLE_NAME)))
+                .failsWithMessage("Dropping last column is not supported");
+    }
 }
