@@ -25,6 +25,7 @@ public class JsonPathTokenizer
         extends AbstractIterator<String>
 {
     private static final char QUOTE = '\"';
+    private static final char BACKQUOTE = '\\';
     private static final char DOT = '.';
     private static final char OPEN_BRACKET = '[';
     private static final char CLOSE_BRACKET = ']';
@@ -63,6 +64,13 @@ public class JsonPathTokenizer
             return token;
         }
 
+        if (tryMatch(QUOTE)) {
+            String token = tryMatch(QUOTE) ? matchQuotedSubscript() : matchUnquotedSubscript();
+
+//            match(QUOTE);
+            return token;
+        }
+
         throw invalidJsonPath();
     }
 
@@ -70,8 +78,8 @@ public class JsonPathTokenizer
     {
         // seek until we see a special character or whitespace
         int start = index;
-        while (hasNextCharacter() && isUnquotedPathCharacter(peekCharacter())) {
-            nextCharacter();
+        while (hasNextCharacter() && isUnquotedPathCharacter()) {
+                nextCharacter();
         }
         int end = index;
 
@@ -85,9 +93,11 @@ public class JsonPathTokenizer
         return token;
     }
 
-    private static boolean isUnquotedPathCharacter(char c)
+    private boolean isUnquotedPathCharacter()
     {
-        return c == ':' || isUnquotedSubscriptCharacter(c);
+        return peekCharacter() == ':' || isUnquotedSubscriptCharacter(peekCharacter())
+//                || path.charAt(index) == QUOTE
+                ;
     }
 
     private String matchUnquotedSubscript()
@@ -120,7 +130,11 @@ public class JsonPathTokenizer
 
         // seek until we see the close quote
         int start = index;
-        while (hasNextCharacter() && peekCharacter() != QUOTE) {
+        while (hasNextCharacter()) {
+            if (peekCharacter() == QUOTE && path.charAt(index - 1) != BACKQUOTE) {
+                break;
+            }
+
             nextCharacter();
         }
         int end = index;

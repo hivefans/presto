@@ -238,6 +238,10 @@ public class TestJsonExtract
     public void testFullJsonExtract()
             throws Exception
     {
+//        assertEquals(doJsonExtract("{\"f\"uu\": \"abc\\\"def\"}", "$.[f\"uu]"), "\"abc\\\"def\"");
+        assertEquals(doJsonExtract("{\"f\\\"uu\": \"abc\\\"def\"}", "$[\"f\\\"uu\"]"), "\"abc\\\"def\"");
+//        assertEquals(doJsonExtract("{\"f\\uu\": \"abc\\\"def\"}", "$.f\\uu"), "\"abc\\\"def\"");
+
         assertEquals(doJsonExtract("{}", "$"), "{}");
         assertEquals(doJsonExtract("{\"fuu\": {\"bar\": 1}}", "$.fuu"), "{\"bar\":1}");
         assertEquals(doJsonExtract("{\"fuu\": 1}", "$.fuu"), "1");
@@ -302,6 +306,8 @@ public class TestJsonExtract
         assertEquals(doJsonExtract("{\"15day\" : 0, \"30day\" : 1, \"90day\" : 2, }", "$.30day"), "1");
         assertEquals(doJsonExtract("{\"15day\" : 0, \"30day\" : 1, \"90day\" : 2, }", "$[30day]"), "1");
         assertEquals(doJsonExtract("{\"15day\" : 0, \"30day\" : 1, \"90day\" : 2, }", "$[\"30day\"]"), "1");
+
+        // Test fields containing with backslashes
     }
 
     @Test
