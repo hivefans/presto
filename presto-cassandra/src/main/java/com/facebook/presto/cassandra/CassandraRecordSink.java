@@ -47,6 +47,7 @@ public class CassandraRecordSink
     private final List<Object> values;
     private final List<Type> columnTypes;
     private int field = -1;
+    private boolean appendId = false;
 
     @Inject
     public CassandraRecordSink(CassandraOutputTableHandle handle, CassandraSession cassandraSession)
@@ -57,6 +58,7 @@ public class CassandraRecordSink
         String schemaName = handle.getSchemaName();
         StringBuilder queryBuilder = new StringBuilder(String.format("INSERT INTO \"%s\".\"%s\"(", schemaName, handle.getTableName()));
         queryBuilder.append("id");
+        appendId = true;
 
         for (String columnName : handle.getColumnNames()) {
             queryBuilder.append(",").append(columnName);
@@ -74,6 +76,28 @@ public class CassandraRecordSink
         columnTypes = handle.getColumnTypes();
     }
 
+    @Inject
+    public CassandraRecordSink(CassandraInsertTableHandle handle, CassandraSession cassandraSession)
+    {
+        this.fieldCount = requireNonNull(handle, "handle is null").getColumnNames().size();
+        this.cassandraSession = requireNonNull(cassandraSession, "cassandraSession is null");
+
+        String schemaName = handle.getSchemaName();
+        StringBuilder queryBuilder = new StringBuilder(String.format("INSERT INTO \"%s\".\"%s\"(", schemaName, handle.getTableName()));
+        queryBuilder.append(String.join(",", handle.getColumnNames()));
+        queryBuilder.append(") VALUES (?");
+
+        for (int i = 1; i < handle.getColumnNames().size(); i++) {
+            queryBuilder.append(",?");
+        }
+        queryBuilder.append(")");
+
+        insertQuery = queryBuilder.toString();
+        values = new ArrayList<>();
+
+        columnTypes = handle.getColumnTypes();
+    }
+
     @Override
     public void beginRecord()
     {
@@ -81,7 +105,10 @@ public class CassandraRecordSink
 
         field = 0;
         values.clear();
-        values.add(UUID.randomUUID());
+
+        if (appendId) {
+            values.add(UUID.randomUUID());
+        }
     }
 
     @Override

@@ -49,6 +49,10 @@ public class CassandraConnectorRecordSinkProvider
     @Override
     public RecordSink getRecordSink(ConnectorTransactionHandle transaction, ConnectorSession session, ConnectorInsertTableHandle tableHandle)
     {
-        throw new UnsupportedOperationException();
+        requireNonNull(tableHandle, "tableHandle is null");
+        checkArgument(tableHandle instanceof CassandraInsertTableHandle, "tableHandle is not an instance of ConnectorInsertTableHandle");
+        CassandraInsertTableHandle handle = (CassandraInsertTableHandle) tableHandle;
+
+        return new CassandraRecordSink(handle, cassandraSession);
     }
 }

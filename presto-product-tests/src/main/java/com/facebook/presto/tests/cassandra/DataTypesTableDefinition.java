@@ -17,6 +17,7 @@ import com.datastax.driver.core.utils.Bytes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.teradata.tempto.fulfillment.table.TableDefinitionsRepository;
 import com.teradata.tempto.fulfillment.table.jdbc.RelationalDataSource;
 import com.teradata.tempto.internal.fulfillment.table.cassandra.CassandraTableDefinition;
 
@@ -34,6 +35,7 @@ import static com.facebook.presto.tests.cassandra.TestConstants.KEY_SPACE;
 
 public class DataTypesTableDefinition
 {
+    @TableDefinitionsRepository.RepositoryTableDefinition
     public static final CassandraTableDefinition CASSANDRA_ALL_TYPES;
 
     private DataTypesTableDefinition() {}
