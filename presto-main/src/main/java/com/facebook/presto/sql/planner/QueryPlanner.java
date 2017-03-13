@@ -38,7 +38,9 @@ import com.facebook.presto.sql.planner.plan.ProjectNode;
 import com.facebook.presto.sql.planner.plan.SortNode;
 import com.facebook.presto.sql.planner.plan.TableScanNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode.DeleteHandle;
+import com.facebook.presto.sql.planner.plan.TableWriterNode.TruncateHandle;
 import com.facebook.presto.sql.planner.plan.TopNNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.ValuesNode;
 import com.facebook.presto.sql.planner.plan.WindowNode;
 import com.facebook.presto.sql.tree.Cast;
@@ -57,6 +59,7 @@ import com.facebook.presto.sql.tree.SortItem;
 import com.facebook.presto.sql.tree.SortItem.NullOrdering;
 import com.facebook.presto.sql.tree.SortItem.Ordering;
 import com.facebook.presto.sql.tree.SymbolReference;
+import com.facebook.presto.sql.tree.Truncate;
 import com.facebook.presto.sql.tree.Window;
 import com.facebook.presto.sql.tree.WindowFrame;
 import com.facebook.presto.util.maps.IdentityLinkedHashMap;
@@ -236,6 +239,40 @@ class QueryPlanner
                 symbolAllocator.newSymbol("fragment", VARBINARY));
 
         return new DeleteNode(idAllocator.getNextId(), builder.getRoot(), new DeleteHandle(handle, metadata.getTableMetadata(session, handle).getTable()), rowId, outputs);
+    }
+
+    public TruncateNode plan(Truncate node)
+    {
+        RelationType descriptor = analysis.getOutputDescriptor(node.getTable());
+        TableHandle handle = analysis.getTableHandle(node.getTable());
+
+        // add table columns
+        ImmutableList.Builder<Symbol> outputSymbols = ImmutableList.builder();
+        ImmutableMap.Builder<Symbol, ColumnHandle> columns = ImmutableMap.builder();
+        ImmutableList.Builder<Field> fields = ImmutableList.builder();
+        for (Field field : descriptor.getAllFields()) {
+            Symbol symbol = symbolAllocator.newSymbol(field.getName().get(), field.getType());
+            outputSymbols.add(symbol);
+            columns.put(symbol, analysis.getColumn(field));
+            fields.add(field);
+        }
+
+        // create table scan
+        PlanNode tableScan = new TableScanNode(idAllocator.getNextId(), handle, outputSymbols.build(), columns.build(), Optional.empty(), TupleDomain.all(), null);
+        Scope scope = Scope.builder().withRelationType(new RelationType(fields.build())).build();
+        RelationPlan relationPlan = new RelationPlan(tableScan, scope, outputSymbols.build());
+
+        TranslationMap translations = new TranslationMap(relationPlan, analysis, lambdaDeclarationToSymbolMap);
+        translations.setFieldMappings(relationPlan.getFieldMappings());
+
+        PlanBuilder builder = new PlanBuilder(translations, relationPlan.getRoot(), analysis.getParameters());
+
+        // create delete node
+        List<Symbol> outputs = ImmutableList.of(
+                symbolAllocator.newSymbol("partialrows", BIGINT),
+                symbolAllocator.newSymbol("fragment", VARBINARY));
+
+        return new TruncateNode(idAllocator.getNextId(), builder.getRoot(), new TruncateHandle(handle, metadata.getTableMetadata(session, handle).getTable()), outputs);
     }
 
     private static List<Symbol> computeOutputs(PlanBuilder builder, List<Expression> outputExpressions)

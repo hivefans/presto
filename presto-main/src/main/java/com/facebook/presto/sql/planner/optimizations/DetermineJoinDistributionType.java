@@ -23,6 +23,7 @@ import com.facebook.presto.sql.planner.plan.JoinNode;
 import com.facebook.presto.sql.planner.plan.PlanNode;
 import com.facebook.presto.sql.planner.plan.SemiJoinNode;
 import com.facebook.presto.sql.planner.plan.SimplePlanRewriter;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 
 import java.util.Map;
 import java.util.Optional;
@@ -106,6 +107,20 @@ public class DetermineJoinDistributionType
                     rewrittenSource,
                     node.getTarget(),
                     node.getRowId(),
+                    node.getOutputSymbols());
+        }
+
+        @Override
+        public PlanNode visitTruncate(TruncateNode node, RewriteContext<Void> context)
+        {
+            // For delete queries, the TableScan node that corresponds to the table being deleted must be collocated with the Delete node,
+            // so you can't do a distributed semi-join
+            isDeleteQuery = true;
+            PlanNode rewrittenSource = context.rewrite(node.getSource());
+            return new TruncateNode(
+                    node.getId(),
+                    rewrittenSource,
+                    node.getTarget(),
                     node.getOutputSymbols());
         }
 

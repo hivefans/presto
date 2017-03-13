@@ -304,6 +304,24 @@ public interface ConnectorMetadata
     }
 
     /**
+     * Begin truncate query
+     */
+    default ConnectorTableHandle beginTruncate(ConnectorSession session, ConnectorTableHandle tableHandle)
+    {
+        throw new PrestoException(NOT_SUPPORTED, "This connector does not support truncates");
+    }
+
+    /**
+     * Finish truncate query
+     *
+     * @param fragments all fragments returned by {@link com.facebook.presto.spi.UpdatablePageSource#finish()}
+     */
+    default void finishTruncate(ConnectorSession session, ConnectorTableHandle tableHandle, Collection<Slice> fragments)
+    {
+        throw new PrestoException(NOT_SUPPORTED, "This connector does not support truncates");
+    }
+
+    /**
      * Create the specified view. The data for the view is opaque to the connector.
      */
     default void createView(ConnectorSession session, SchemaTableName viewName, String viewData, boolean replace)

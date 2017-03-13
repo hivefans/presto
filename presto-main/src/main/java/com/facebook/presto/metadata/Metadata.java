@@ -223,6 +223,16 @@ public interface Metadata
     void finishDelete(Session session, TableHandle tableHandle, Collection<Slice> fragments);
 
     /**
+     * Begin delete query
+     */
+    TableHandle beginTruncate(Session session, TableHandle tableHandle);
+
+    /**
+     * Finish delete query
+     */
+    void finishTruncate(Session session, TableHandle tableHandle, Collection<Slice> fragments);
+
+    /**
      * Returns a connector id for the specified catalog name.
      */
     Optional<ConnectorId> getCatalogHandle(Session session, String catalogName);

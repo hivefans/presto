@@ -108,6 +108,7 @@ import com.facebook.presto.sql.tree.Table;
 import com.facebook.presto.sql.tree.TimeLiteral;
 import com.facebook.presto.sql.tree.TimestampLiteral;
 import com.facebook.presto.sql.tree.TransactionAccessMode;
+import com.facebook.presto.sql.tree.Truncate;
 import com.facebook.presto.sql.tree.Union;
 import com.facebook.presto.sql.tree.Unnest;
 import com.facebook.presto.sql.tree.With;
@@ -1341,6 +1342,12 @@ public class TestSqlParser
                 new ComparisonExpression(ComparisonExpressionType.EQUAL,
                         new Identifier("a"),
                         new Identifier("b")))));
+    }
+
+    @Test
+    public void testTruncate()
+    {
+        assertStatement("TRUNCATE TABLE t", new Truncate(table(QualifiedName.of("t"))));
     }
 
     @Test

@@ -1010,6 +1010,12 @@ public class HiveMetadata
     }
 
     @Override
+    public ConnectorTableHandle beginTruncate(ConnectorSession session, ConnectorTableHandle tableHandle)
+    {
+        throw new PrestoException(NOT_SUPPORTED, "This connector only supports delete where one or more partitions are deleted entirely");
+    }
+
+    @Override
     public ColumnHandle getUpdateRowIdColumnHandle(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
         return updateRowIdHandle(connectorId);

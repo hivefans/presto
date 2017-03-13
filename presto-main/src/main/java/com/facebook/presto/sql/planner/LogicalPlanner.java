@@ -39,6 +39,7 @@ import com.facebook.presto.sql.planner.plan.PlanNode;
 import com.facebook.presto.sql.planner.plan.ProjectNode;
 import com.facebook.presto.sql.planner.plan.TableFinishNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.ValuesNode;
 import com.facebook.presto.sql.planner.sanity.PlanSanityChecker;
 import com.facebook.presto.sql.tree.Cast;
@@ -52,6 +53,7 @@ import com.facebook.presto.sql.tree.LongLiteral;
 import com.facebook.presto.sql.tree.NullLiteral;
 import com.facebook.presto.sql.tree.Query;
 import com.facebook.presto.sql.tree.Statement;
+import com.facebook.presto.sql.tree.Truncate;
 import com.facebook.presto.util.maps.IdentityLinkedHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -156,6 +158,9 @@ public class LogicalPlanner
         }
         else if (statement instanceof Delete) {
             return createDeletePlan(analysis, (Delete) statement);
+        }
+        else if (statement instanceof Truncate) {
+            return createTruncatePlan(analysis, (Truncate) statement);
         }
         else if (statement instanceof Query) {
             return createRelationPlan(analysis, (Query) statement);
@@ -322,6 +327,17 @@ public class LogicalPlanner
     private RelationPlan createDeletePlan(Analysis analysis, Delete node)
     {
         DeleteNode deleteNode = new QueryPlanner(analysis, symbolAllocator, idAllocator, buildLambdaDeclarationToSymbolMap(analysis, symbolAllocator), metadata, session)
+                .plan(node);
+
+        List<Symbol> outputs = ImmutableList.of(symbolAllocator.newSymbol("rows", BIGINT));
+        TableFinishNode commitNode = new TableFinishNode(idAllocator.getNextId(), deleteNode, deleteNode.getTarget(), outputs);
+
+        return new RelationPlan(commitNode, analysis.getScope(node), commitNode.getOutputSymbols());
+    }
+
+    private RelationPlan createTruncatePlan(Analysis analysis, Truncate node)
+    {
+        TruncateNode deleteNode = new QueryPlanner(analysis, symbolAllocator, idAllocator, buildLambdaDeclarationToSymbolMap(analysis, symbolAllocator), metadata, session)
                 .plan(node);
 
         List<Symbol> outputs = ImmutableList.of(symbolAllocator.newSymbol("rows", BIGINT));

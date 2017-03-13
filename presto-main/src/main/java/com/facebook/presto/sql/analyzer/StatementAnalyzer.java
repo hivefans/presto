@@ -99,6 +99,7 @@ import com.facebook.presto.sql.tree.StartTransaction;
 import com.facebook.presto.sql.tree.Statement;
 import com.facebook.presto.sql.tree.Table;
 import com.facebook.presto.sql.tree.TableSubquery;
+import com.facebook.presto.sql.tree.Truncate;
 import com.facebook.presto.sql.tree.Unnest;
 import com.facebook.presto.sql.tree.Use;
 import com.facebook.presto.sql.tree.Values;
@@ -371,6 +372,33 @@ class StatementAnalyzer
 
             Scope tableScope = analyzer.analyze(table, scope);
             node.getWhere().ifPresent(where -> analyzer.analyzeWhere(node, tableScope, where));
+
+            analysis.setUpdateType("DELETE");
+
+            accessControl.checkCanDeleteFromTable(session.getRequiredTransactionId(), session.getIdentity(), tableName);
+
+            return createAndAssignScope(node, scope, Field.newUnqualified("rows", BIGINT));
+        }
+
+        @Override
+        protected Scope visitTruncateTable(Truncate node, Optional<Scope> scope)
+        {
+            Table table = node.getTable();
+            QualifiedObjectName tableName = createQualifiedObjectName(session, table, table.getName());
+            if (metadata.getView(session, tableName).isPresent()) {
+                throw new SemanticException(NOT_SUPPORTED, node, "Truncating views is not supported");
+            }
+
+            // Analyzer checks for select permissions but DELETE has a separate permission, so disable access checks
+            // TODO: we shouldn't need to create a new analyzer. The access control should be carried in the context object
+            StatementAnalyzer analyzer = new StatementAnalyzer(
+                    analysis,
+                    metadata,
+                    sqlParser,
+                    new AllowAllAccessControl(),
+                    session);
+
+            analyzer.analyze(table, scope);
 
             analysis.setUpdateType("DELETE");
 

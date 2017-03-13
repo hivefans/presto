@@ -131,6 +131,7 @@ public class TableWriterNode
             @JsonSubTypes.Type(value = CreateHandle.class, name = "CreateHandle"),
             @JsonSubTypes.Type(value = InsertHandle.class, name = "InsertHandle"),
             @JsonSubTypes.Type(value = DeleteHandle.class, name = "DeleteHandle"),
+            @JsonSubTypes.Type(value = TruncateHandle.class, name = "TruncateHandle"),
     })
     @SuppressWarnings({"EmptyClass", "ClassMayBeInterface"})
     public abstract static class WriterTarget
@@ -275,6 +276,40 @@ public class TableWriterNode
 
         @JsonCreator
         public DeleteHandle(
+                @JsonProperty("handle") TableHandle handle,
+                @JsonProperty("schemaTableName") SchemaTableName schemaTableName)
+        {
+            this.handle = requireNonNull(handle, "handle is null");
+            this.schemaTableName = requireNonNull(schemaTableName, "schemaTableName is null");
+        }
+
+        @JsonProperty
+        public TableHandle getHandle()
+        {
+            return handle;
+        }
+
+        @JsonProperty
+        public SchemaTableName getSchemaTableName()
+        {
+            return schemaTableName;
+        }
+
+        @Override
+        public String toString()
+        {
+            return handle.toString();
+        }
+    }
+
+    public static class TruncateHandle
+            extends WriterTarget
+    {
+        private final TableHandle handle;
+        private final SchemaTableName schemaTableName;
+
+        @JsonCreator
+        public TruncateHandle(
                 @JsonProperty("handle") TableHandle handle,
                 @JsonProperty("schemaTableName") SchemaTableName schemaTableName)
         {

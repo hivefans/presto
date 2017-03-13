@@ -99,6 +99,7 @@ import com.facebook.presto.sql.tree.ShowSession;
 import com.facebook.presto.sql.tree.ShowTables;
 import com.facebook.presto.sql.tree.StartTransaction;
 import com.facebook.presto.sql.tree.Statement;
+import com.facebook.presto.sql.tree.Truncate;
 import com.facebook.presto.sql.tree.Use;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
@@ -222,6 +223,7 @@ public class CoordinatorModule
         executionBinder.addBinding(CreateTableAsSelect.class).to(SqlQueryExecutionFactory.class).in(Scopes.SINGLETON);
         executionBinder.addBinding(Insert.class).to(SqlQueryExecutionFactory.class).in(Scopes.SINGLETON);
         executionBinder.addBinding(Delete.class).to(SqlQueryExecutionFactory.class).in(Scopes.SINGLETON);
+        executionBinder.addBinding(Truncate.class).to(SqlQueryExecutionFactory.class).in(Scopes.SINGLETON);
         executionBinder.addBinding(DescribeInput.class).to(SqlQueryExecutionFactory.class).in(Scopes.SINGLETON);
         executionBinder.addBinding(DescribeOutput.class).to(SqlQueryExecutionFactory.class).in(Scopes.SINGLETON);
 

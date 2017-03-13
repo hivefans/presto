@@ -16,6 +16,7 @@ package com.facebook.presto.plugin.mysql;
 import com.facebook.presto.plugin.jdbc.BaseJdbcClient;
 import com.facebook.presto.plugin.jdbc.BaseJdbcConfig;
 import com.facebook.presto.plugin.jdbc.JdbcConnectorId;
+import com.facebook.presto.plugin.jdbc.JdbcTableHandle;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
@@ -111,6 +112,12 @@ public class MySqlClient
         return new SchemaTableName(
                 resultSet.getString("TABLE_CAT").toLowerCase(ENGLISH),
                 resultSet.getString("TABLE_NAME").toLowerCase(ENGLISH));
+    }
+
+    @Override
+    public JdbcTableHandle beginTruncate(JdbcTableHandle jdbcTableHandle)
+    {
+        return super.beginTruncate(jdbcTableHandle);
     }
 
     @Override

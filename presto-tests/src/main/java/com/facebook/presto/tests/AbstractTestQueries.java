@@ -7915,6 +7915,7 @@ public abstract class AbstractTestQueries
         assertAccessDenied("SELECT COUNT(true) FROM orders", "Cannot select from table .*.orders.*", privilege("orders", SELECT_TABLE));
         assertAccessDenied("INSERT INTO orders SELECT * FROM orders", "Cannot insert into table .*.orders.*", privilege("orders", INSERT_TABLE));
         assertAccessDenied("DELETE FROM orders", "Cannot delete from table .*.orders.*", privilege("orders", DELETE_TABLE));
+        assertAccessDenied("TRUNCATE TABLE orders", "Cannot delete from table .*.orders.*", privilege("orders", DELETE_TABLE));
         assertAccessDenied("CREATE TABLE foo AS SELECT * FROM orders", "Cannot create table .*.foo.*", privilege("foo", CREATE_TABLE));
     }
 
@@ -8438,5 +8439,12 @@ public abstract class AbstractTestQueries
                         "       FROM (" + unionLineitem50Times + ")) o(c)) result(a) " +
                         "WHERE a = 1)",
                 "VALUES 3008750");
+    }
+
+    @Test
+    public void testTruncateTable()
+    {
+        assertUpdate("CREATE TABLE foo AS SELECT * FROM nation", 25);
+        assertUpdate("TRUNCATE TABLE foo", 0);
     }
 }

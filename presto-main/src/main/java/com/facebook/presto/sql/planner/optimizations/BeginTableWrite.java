@@ -34,6 +34,7 @@ import com.facebook.presto.sql.planner.plan.SimplePlanRewriter;
 import com.facebook.presto.sql.planner.plan.TableFinishNode;
 import com.facebook.presto.sql.planner.plan.TableScanNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.UnionNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -113,6 +114,17 @@ public class BeginTableWrite
         }
 
         @Override
+        public PlanNode visitTruncate(TruncateNode node, RewriteContext<Context> context)
+        {
+            TableWriterNode.TruncateHandle deleteHandle = (TableWriterNode.TruncateHandle) context.get().getMaterializedHandle(node.getTarget()).get();
+            return new TruncateNode(
+                    node.getId(),
+                    rewriteDeleteTableScan(node.getSource(), deleteHandle.getHandle()),
+                    deleteHandle,
+                    node.getOutputSymbols());
+        }
+
+        @Override
         public PlanNode visitTableFinish(TableFinishNode node, RewriteContext<Context> context)
         {
             PlanNode child = node.getSource();
@@ -133,6 +145,9 @@ public class BeginTableWrite
             }
             if (node instanceof DeleteNode) {
                 return ((DeleteNode) node).getTarget();
+            }
+            if (node instanceof TruncateNode) {
+                return ((TruncateNode) node).getTarget();
             }
             if (node instanceof ExchangeNode || node instanceof UnionNode) {
                 Set<TableWriterNode.WriterTarget> writerTargets = node.getSources().stream()
@@ -158,6 +173,10 @@ public class BeginTableWrite
             if (target instanceof TableWriterNode.DeleteHandle) {
                 TableWriterNode.DeleteHandle delete = (TableWriterNode.DeleteHandle) target;
                 return new TableWriterNode.DeleteHandle(metadata.beginDelete(session, delete.getHandle()), delete.getSchemaTableName());
+            }
+            if (target instanceof TableWriterNode.TruncateHandle) {
+                TableWriterNode.TruncateHandle delete = (TableWriterNode.TruncateHandle) target;
+                return new TableWriterNode.TruncateHandle(metadata.beginTruncate(session, delete.getHandle()), delete.getSchemaTableName());
             }
             throw new IllegalArgumentException("Unhandled target type: " + target.getClass().getSimpleName());
         }

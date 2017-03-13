@@ -497,6 +497,14 @@ public abstract class DefaultTraversalVisitor<R, C>
     }
 
     @Override
+    protected R visitTruncateTable(Truncate node, C context)
+    {
+        process(node.getTable(), context);
+
+        return null;
+    }
+
+    @Override
     protected R visitCreateTableAsSelect(CreateTableAsSelect node, C context)
     {
         process(node.getQuery(), context);

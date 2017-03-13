@@ -71,6 +71,7 @@ import com.facebook.presto.sql.planner.plan.TableScanNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
 import com.facebook.presto.sql.planner.plan.TopNNode;
 import com.facebook.presto.sql.planner.plan.TopNRowNumberNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.UnionNode;
 import com.facebook.presto.sql.planner.plan.UnnestNode;
 import com.facebook.presto.sql.planner.plan.ValuesNode;
@@ -1013,6 +1014,15 @@ public class PlanPrinter
         public Void visitDelete(DeleteNode node, Integer indent)
         {
             print(indent, "- Delete[%s] => [%s]", node.getTarget(), formatOutputs(node.getOutputSymbols()));
+            printStats(indent + 2, node.getId());
+
+            return processChildren(node, indent + 1);
+        }
+
+        @Override
+        public Void visitTruncate(TruncateNode node, Integer indent)
+        {
+            print(indent, "- Truncate[%s] => [%s]", node.getTarget(), formatOutputs(node.getOutputSymbols()));
             printStats(indent + 2, node.getId());
 
             return processChildren(node, indent + 1);

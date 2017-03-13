@@ -88,6 +88,8 @@ public class TestGrantRevoke
         assertThat(bobExecutor.executeQuery(format("SELECT * FROM %s", tableName))).hasRowsCount(1);
         assertThat(() -> bobExecutor.executeQuery(format("DELETE FROM %s WHERE day=3", tableName))).
                 failsWithMessage(format("Access Denied: Cannot delete from table default.%s", tableName));
+        assertThat(() -> bobExecutor.executeQuery(format("TRUNCATE TABLE %s", tableName))).
+                failsWithMessage(format("Access Denied: Cannot delete from table default.%s", tableName));
 
         // test REVOKE
         aliceExecutor.executeQuery(format("REVOKE INSERT ON %s FROM bob", tableName));
@@ -127,6 +129,11 @@ public class TestGrantRevoke
         assertThat(bobExecutor.executeQuery(format("INSERT INTO %s VALUES (4, 13)", tableName))).hasRowsCount(1);
         assertThat(bobExecutor.executeQuery(format("SELECT * FROM %s", tableName))).hasRowsCount(1);
         bobExecutor.executeQuery(format("DELETE FROM %s", tableName));
+        assertThat(bobExecutor.executeQuery(format("SELECT * FROM %s", tableName))).hasNoRows();
+
+        assertThat(bobExecutor.executeQuery(format("INSERT INTO %s VALUES (4, 13)", tableName))).hasRowsCount(1);
+        assertThat(bobExecutor.executeQuery(format("SELECT * FROM %s", tableName))).hasRowsCount(1);
+        bobExecutor.executeQuery(format("TRUNCATE TABLE %s", tableName));
         assertThat(bobExecutor.executeQuery(format("SELECT * FROM %s", tableName))).hasNoRows();
 
         aliceExecutor.executeQuery(format("REVOKE ALL PRIVILEGES ON %s FROM bob", tableName));

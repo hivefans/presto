@@ -159,6 +159,31 @@ public class JdbcMetadata
     }
 
     @Override
+    public JdbcTableHandle beginTruncate(ConnectorSession session, ConnectorTableHandle tableHandle)
+    {
+        JdbcTableHandle handle = (JdbcTableHandle) tableHandle;
+        return jdbcClient.beginTruncate(handle);
+    }
+
+    @Override
+    public void finishTruncate(ConnectorSession session, ConnectorTableHandle tableHandle, Collection<Slice> fragments)
+    {
+    }
+
+    @Override
+    public ColumnHandle getUpdateRowIdColumnHandle(ConnectorSession session, ConnectorTableHandle tableHandle)
+    {
+        JdbcTableHandle handle = (JdbcTableHandle) tableHandle;
+
+        List<JdbcColumnHandle> column = jdbcClient.getColumns(handle);
+        JdbcColumnHandle columnHandle = null;
+        if (!column.isEmpty()) {
+            columnHandle = column.get(0);
+        }
+        return columnHandle;
+    }
+
+    @Override
     public ConnectorOutputTableHandle beginCreateTable(ConnectorSession session, ConnectorTableMetadata tableMetadata, Optional<ConnectorNewTableLayout> layout)
     {
         JdbcOutputTableHandle handle = jdbcClient.beginCreateTable(tableMetadata);

@@ -59,6 +59,7 @@ import com.facebook.presto.operator.TableScanOperator.TableScanOperatorFactory;
 import com.facebook.presto.operator.TaskOutputOperator.TaskOutputFactory;
 import com.facebook.presto.operator.TopNOperator.TopNOperatorFactory;
 import com.facebook.presto.operator.TopNRowNumberOperator;
+import com.facebook.presto.operator.TruncateOperator;
 import com.facebook.presto.operator.ValuesOperator.ValuesOperatorFactory;
 import com.facebook.presto.operator.WindowFunctionDefinition;
 import com.facebook.presto.operator.WindowOperator.WindowOperatorFactory;
@@ -133,8 +134,10 @@ import com.facebook.presto.sql.planner.plan.TableFinishNode;
 import com.facebook.presto.sql.planner.plan.TableScanNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode.DeleteHandle;
+import com.facebook.presto.sql.planner.plan.TableWriterNode.TruncateHandle;
 import com.facebook.presto.sql.planner.plan.TopNNode;
 import com.facebook.presto.sql.planner.plan.TopNRowNumberNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.UnionNode;
 import com.facebook.presto.sql.planner.plan.UnnestNode;
 import com.facebook.presto.sql.planner.plan.ValuesNode;
@@ -1761,6 +1764,21 @@ public class LocalExecutionPlanner
         }
 
         @Override
+        public PhysicalOperation visitTruncate(TruncateNode node, LocalExecutionPlanContext context)
+        {
+            PhysicalOperation source = node.getSource().accept(this, context);
+
+            OperatorFactory operatorFactory = new TruncateOperator.TruncateOperatorFactory(context.getNextOperatorId(), node.getId());
+
+            Map<Symbol, Integer> layout = ImmutableMap.<Symbol, Integer>builder()
+                    .put(node.getOutputSymbols().get(0), 0)
+                    .put(node.getOutputSymbols().get(1), 1)
+                    .build();
+
+            return new PhysicalOperation(operatorFactory, layout, source);
+        }
+
+        @Override
         public PhysicalOperation visitMetadataDelete(MetadataDeleteNode node, LocalExecutionPlanContext context)
         {
             OperatorFactory operatorFactory = new MetadataDeleteOperatorFactory(context.getNextOperatorId(), node.getId(), node.getTableLayout(), metadata, session, node.getTarget().getHandle());
@@ -1996,6 +2014,10 @@ public class LocalExecutionPlanner
             }
             else if (target instanceof DeleteHandle) {
                 metadata.finishDelete(session, ((DeleteHandle) target).getHandle(), fragments);
+                return Optional.empty();
+            }
+            else if (target instanceof TruncateHandle) {
+                metadata.finishTruncate(session, ((TruncateHandle) target).getHandle(), fragments);
                 return Optional.empty();
             }
             else {

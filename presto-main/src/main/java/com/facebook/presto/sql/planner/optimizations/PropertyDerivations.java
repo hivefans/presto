@@ -58,6 +58,7 @@ import com.facebook.presto.sql.planner.plan.TableScanNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
 import com.facebook.presto.sql.planner.plan.TopNNode;
 import com.facebook.presto.sql.planner.plan.TopNRowNumberNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.UnnestNode;
 import com.facebook.presto.sql.planner.plan.ValuesNode;
 import com.facebook.presto.sql.planner.plan.WindowNode;
@@ -343,6 +344,12 @@ class PropertyDerivations
         public ActualProperties visitDelete(DeleteNode node, List<ActualProperties> inputProperties)
         {
             // drop all symbols in property because delete doesn't pass on any of the columns
+            return Iterables.getOnlyElement(inputProperties).translate(symbol -> Optional.empty());
+        }
+
+        @Override
+        public ActualProperties visitTruncate(TruncateNode node, List<ActualProperties> inputProperties)
+        {
             return Iterables.getOnlyElement(inputProperties).translate(symbol -> Optional.empty());
         }
 

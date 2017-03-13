@@ -45,6 +45,7 @@ statement
     | DROP TABLE (IF EXISTS)? qualifiedName                            #dropTable
     | INSERT INTO qualifiedName columnAliases? query                   #insertInto
     | DELETE FROM qualifiedName (WHERE booleanExpression)?             #delete
+    | TRUNCATE TABLE qualifiedName                                     #truncateTable
     | ALTER TABLE from=qualifiedName RENAME TO to=qualifiedName        #renameTable
     | ALTER TABLE tableName=qualifiedName
         RENAME COLUMN from=identifier TO to=identifier                 #renameColumn
@@ -567,6 +568,7 @@ VIEW: 'VIEW';
 REPLACE: 'REPLACE';
 INSERT: 'INSERT';
 DELETE: 'DELETE';
+TRUNCATE: 'TRUNCATE';
 INTO: 'INTO';
 CONSTRAINT: 'CONSTRAINT';
 DESCRIBE: 'DESCRIBE';

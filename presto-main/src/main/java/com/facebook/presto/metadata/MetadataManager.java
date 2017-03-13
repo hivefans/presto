@@ -678,6 +678,23 @@ public class MetadataManager
     }
 
     @Override
+    public TableHandle beginTruncate(Session session, TableHandle tableHandle)
+    {
+        ConnectorId connectorId = tableHandle.getConnectorId();
+        ConnectorMetadata metadata = getMetadataForWrite(session, connectorId);
+        ConnectorTableHandle newHandle = metadata.beginTruncate(session.toConnectorSession(connectorId), tableHandle.getConnectorHandle());
+        return new TableHandle(tableHandle.getConnectorId(), newHandle);
+    }
+
+    @Override
+    public void finishTruncate(Session session, TableHandle tableHandle, Collection<Slice> fragments)
+    {
+        ConnectorId connectorId = tableHandle.getConnectorId();
+        ConnectorMetadata metadata = getMetadata(session, connectorId);
+        metadata.finishTruncate(session.toConnectorSession(connectorId), tableHandle.getConnectorHandle(), fragments);
+    }
+
+    @Override
     public Optional<ConnectorId> getCatalogHandle(Session session, String catalogName)
     {
         return transactionManager.getOptionalCatalogMetadata(session.getRequiredTransactionId(), catalogName).map(CatalogMetadata::getConnectorId);

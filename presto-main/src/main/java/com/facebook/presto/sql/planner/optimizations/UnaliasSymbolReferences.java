@@ -55,6 +55,7 @@ import com.facebook.presto.sql.planner.plan.TableScanNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
 import com.facebook.presto.sql.planner.plan.TopNNode;
 import com.facebook.presto.sql.planner.plan.TopNRowNumberNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.UnionNode;
 import com.facebook.presto.sql.planner.plan.UnnestNode;
 import com.facebook.presto.sql.planner.plan.ValuesNode;
@@ -362,6 +363,12 @@ public class UnaliasSymbolReferences
         public PlanNode visitDelete(DeleteNode node, RewriteContext<Void> context)
         {
             return new DeleteNode(node.getId(), context.rewrite(node.getSource()), node.getTarget(), canonicalize(node.getRowId()), node.getOutputSymbols());
+        }
+
+        @Override
+        public PlanNode visitTruncate(TruncateNode node, RewriteContext<Void> context)
+        {
+            return new TruncateNode(node.getId(), context.rewrite(node.getSource()), node.getTarget(), node.getOutputSymbols());
         }
 
         @Override

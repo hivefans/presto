@@ -52,6 +52,7 @@ import com.facebook.presto.sql.planner.plan.TableScanNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
 import com.facebook.presto.sql.planner.plan.TopNNode;
 import com.facebook.presto.sql.planner.plan.TopNRowNumberNode;
+import com.facebook.presto.sql.planner.plan.TruncateNode;
 import com.facebook.presto.sql.planner.plan.UnionNode;
 import com.facebook.presto.sql.planner.plan.UnnestNode;
 import com.facebook.presto.sql.planner.plan.ValuesNode;
@@ -645,6 +646,13 @@ public class PruneUnreferencedOutputs
         {
             PlanNode source = context.rewrite(node.getSource(), ImmutableSet.of(node.getRowId()));
             return new DeleteNode(node.getId(), source, node.getTarget(), node.getRowId(), node.getOutputSymbols());
+        }
+
+        @Override
+        public PlanNode visitTruncate(TruncateNode node, RewriteContext<Set<Symbol>> context)
+        {
+            PlanNode source = context.rewrite(node.getSource(), ImmutableSet.of());
+            return new TruncateNode(node.getId(), source, node.getTarget(), node.getOutputSymbols());
         }
 
         @Override
