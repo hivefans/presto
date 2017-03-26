@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import java.sql.SQLException;
 
 import static com.facebook.presto.tests.TestGroups.CASSANDRA;
+import static com.facebook.presto.tests.TestGroups.SMOKE;
 import static com.facebook.presto.tests.cassandra.DataTypesTableDefinition.CASSANDRA_ALL_TYPES;
 import static com.teradata.tempto.assertions.QueryAssert.Row.row;
 import static com.teradata.tempto.assertions.QueryAssert.assertThat;
@@ -46,7 +47,7 @@ public class TestInsertIntoCassandraTable
         return mutableTable(CASSANDRA_ALL_TYPES, CASSANDRA_INSERT_TABLE, CREATED);
     }
 
-    @Test(groups = CASSANDRA)
+    @Test(groups = {CASSANDRA, SMOKE})
     public void testInsertIntoValuesToCassandraTableAllSimpleTypes()
             throws SQLException
     {
