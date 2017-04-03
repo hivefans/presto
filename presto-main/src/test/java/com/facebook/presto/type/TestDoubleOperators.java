@@ -18,6 +18,7 @@ import org.testng.annotations.Test;
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
+import static com.facebook.presto.spi.type.CharType.CHAR;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.RealType.REAL;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
@@ -189,6 +190,14 @@ public class TestDoubleOperators
     }
 
     @Test
+    public void testCastToChar()
+            throws Exception
+    {
+        assertFunction("cast(37.7 as char)", CHAR, "37.7");
+        assertFunction("cast(17.1 as char)", CHAR, "17.1");
+    }
+
+    @Test
     public void testCastToBigint()
             throws Exception
     {
@@ -223,6 +232,18 @@ public class TestDoubleOperators
         assertFunction("cast('17.1' as double)", DOUBLE, 17.1);
         assertFunction("cast('37.7' as double precision)", DOUBLE, 37.7);
         assertFunction("cast('17.1' as double precision)", DOUBLE, 17.1);
+    }
+
+    @Test
+    public void testCastFromChar()
+            throws Exception
+    {
+        assertFunction("cast(cast('37.7' as char(4)) as double)", DOUBLE, 37.7);
+        assertFunction("cast(cast('17.1' as char(4)) as double)", DOUBLE, 17.1);
+        assertFunction("cast(cast('37.7' as char(4)) as double precision)", DOUBLE, 37.7);
+        assertFunction("cast(cast('17.1' as char(4)) as double precision)", DOUBLE, 17.1);
+        assertFunction("cast(cast('17.1 ' as char(5)) as double)", DOUBLE, 17.1);
+        assertFunction("cast(cast('17.1 ' as char(5)) as double precision)", DOUBLE, 17.1);
     }
 
     @Test

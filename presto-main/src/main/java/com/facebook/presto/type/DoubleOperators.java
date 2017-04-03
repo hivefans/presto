@@ -236,6 +236,14 @@ public final class DoubleOperators
         return utf8Slice(valueOf(value));
     }
 
+    @ScalarOperator(CAST)
+    @LiteralParameters("x")
+    @SqlType("char(x)")
+    public static Slice castToChar(@SqlType(StandardTypes.DOUBLE) double value)
+    {
+        return utf8Slice(valueOf(value));
+    }
+
     @ScalarOperator(HASH_CODE)
     @SqlType(StandardTypes.BIGINT)
     public static long hashCode(@SqlType(StandardTypes.DOUBLE) double value)

@@ -18,6 +18,7 @@ import org.testng.annotations.Test;
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
+import static com.facebook.presto.spi.type.CharType.CHAR;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.IntegerType.INTEGER;
 import static com.facebook.presto.spi.type.RealType.REAL;
@@ -186,6 +187,16 @@ public class TestRealOperators
     }
 
     @Test
+    public void testCastToChar()
+            throws Exception
+    {
+        assertFunction("CAST(REAL'754.1985' as CHAR)", CHAR, "754.1985");
+        assertFunction("CAST(REAL'-754.2008' as CHAR)", CHAR, "-754.2008");
+        assertFunction("CAST(REAL'Infinity' as CHAR)", CHAR, "Infinity");
+        assertFunction("CAST(REAL'0.0' / REAL'0.0' as CHAR)", CHAR, "NaN");
+    }
+
+    @Test
     public void testCastToBigInt()
             throws Exception
     {
@@ -243,6 +254,23 @@ public class TestRealOperators
         assertFunction("CAST(REAL'754.1985' AS BOOLEAN)", BOOLEAN, true);
         assertFunction("CAST(REAL'0.0' AS BOOLEAN)", BOOLEAN, false);
         assertFunction("CAST(REAL'-0.0' AS BOOLEAN)", BOOLEAN, false);
+    }
+
+    @Test
+    public void testCastFromVarchar()
+            throws Exception
+    {
+        assertFunction("CAST('754.1985' as REAL)", REAL, (float) 754.1985);
+        assertFunction("CAST('-754.2008' as REAL)", REAL, (float) -754.2008);
+    }
+
+    @Test
+    public void testCastFromChar()
+            throws Exception
+    {
+        assertFunction("CAST(CAST('754.1985' as CHAR(8)) as REAL)", REAL, (float) 754.1985);
+        assertFunction("CAST(CAST('-754.2008' as CHAR(9)) as REAL)", REAL, (float) -754.2008);
+        assertFunction("CAST(CAST('-754.2008 ' as CHAR(10)) as REAL)", REAL, (float) -754.2008);
     }
 
     @Test

@@ -224,6 +224,14 @@ public final class TinyintOperators
         return utf8Slice(valueOf(value));
     }
 
+    @ScalarOperator(CAST)
+    @LiteralParameters("x")
+    @SqlType("char(x)")
+    public static Slice castToChar(@SqlType(StandardTypes.TINYINT) long value)
+    {
+        return utf8Slice(valueOf(value));
+    }
+
     @ScalarOperator(HASH_CODE)
     @SqlType(StandardTypes.BIGINT)
     public static long hashCode(@SqlType(StandardTypes.TINYINT) long value)

@@ -66,6 +66,7 @@ import static com.facebook.presto.spi.type.UnscaledDecimal128Arithmetic.unscaled
 import static com.facebook.presto.spi.type.UnscaledDecimal128Arithmetic.unscaledDecimalToUnscaledLong;
 import static com.facebook.presto.spi.type.UnscaledDecimal128Arithmetic.unscaledDecimalToUnscaledLongUnsafe;
 import static com.facebook.presto.type.JsonType.JSON;
+import static com.facebook.presto.type.TypeUtils.validateValueSize;
 import static com.facebook.presto.util.Failures.checkCondition;
 import static com.facebook.presto.util.JsonUtil.createJsonGenerator;
 import static com.facebook.presto.util.JsonUtil.createJsonParser;
@@ -99,6 +100,8 @@ public final class DecimalCasts
     public static final SqlScalarFunction REAL_TO_DECIMAL_CAST = castFunctionToDecimalFrom(REAL.getTypeSignature(), "realToShortDecimal", "realToLongDecimal");
     public static final SqlScalarFunction DECIMAL_TO_VARCHAR_CAST = castFunctionFromDecimalTo(parseTypeSignature("varchar(x)", ImmutableSet.of("x")), "shortDecimalToVarchar", "longDecimalToVarchar");
     public static final SqlScalarFunction VARCHAR_TO_DECIMAL_CAST = castFunctionToDecimalFrom(parseTypeSignature("varchar(x)", ImmutableSet.of("x")), "varcharToShortDecimal", "varcharToLongDecimal");
+    public static final SqlScalarFunction DECIMAL_TO_CHAR_CAST = castFunctionFromDecimalTo(parseTypeSignature("char(x)", ImmutableSet.of("x")), "shortDecimalToChar", "longDecimalToChar");
+    public static final SqlScalarFunction CHAR_TO_DECIMAL_CAST = castFunctionToDecimalFrom(parseTypeSignature("char(x)", ImmutableSet.of("x")), "charToShortDecimal", "charToLongDecimal");
     public static final SqlScalarFunction DECIMAL_TO_JSON_CAST = castFunctionFromDecimalTo(JSON.getTypeSignature(), "shortDecimalToJson", "longDecimalToJson");
     public static final SqlScalarFunction JSON_TO_DECIMAL_CAST = castFunctionToDecimalFromBuilder(JSON.getTypeSignature(), "jsonToShortDecimal", "jsonToLongDecimal").nullableResult(true).build();
 
@@ -562,6 +565,20 @@ public final class DecimalCasts
     }
 
     @UsedByGeneratedCode
+    public static Slice shortDecimalToChar(long decimal, long precision, long scale, long tenToScale)
+    {
+        String value = Decimals.toString(decimal, intScale(scale));
+        return Slices.copiedBuffer(validateValueSize(value, StandardTypes.CHAR, x), UTF_8);
+    }
+
+    @UsedByGeneratedCode
+    public static Slice longDecimalToChar(Slice decimal, long precision, long scale, BigInteger tenToScale)
+    {
+        String value = Decimals.toString(decimal, intScale(scale));
+        return Slices.copiedBuffer(validateValueSize(value, StandardTypes.CHAR, x), UTF_8);
+    }
+
+    @UsedByGeneratedCode
     public static long varcharToShortDecimal(Slice value, long precision, long scale, long tenToScale)
     {
         try {
@@ -584,6 +601,33 @@ public final class DecimalCasts
         BigDecimal decimal = new BigDecimal(stringValue).setScale(intScale(scale), HALF_UP);
         if (overflows(decimal, precision)) {
             throw new PrestoException(INVALID_CAST_ARGUMENT, format("Cannot cast VARCHAR '%s' to DECIMAL(%s, %s)", stringValue, precision, scale));
+        }
+        return encodeUnscaledValue(decimal.unscaledValue());
+    }
+
+    @UsedByGeneratedCode
+    public static long charToShortDecimal(Slice value, long precision, long scale, long tenToScale)
+    {
+        try {
+            String stringValue = value.toString(UTF_8);
+            BigDecimal decimal = new BigDecimal(stringValue).setScale(intScale(scale), HALF_UP);
+            if (overflows(decimal, precision)) {
+                throw new PrestoException(INVALID_CAST_ARGUMENT, format("Cannot cast VARCHAR '%s' to DECIMAL(%s, %s)", stringValue, precision, scale));
+            }
+            return decimal.unscaledValue().longValue();
+        }
+        catch (NumberFormatException e) {
+            throw new PrestoException(INVALID_CAST_ARGUMENT, format("Cannot cast CHAR '%s' to DECIMAL(%s, %s)", value.toString(UTF_8), precision, scale));
+        }
+    }
+
+    @UsedByGeneratedCode
+    public static Slice charToLongDecimal(Slice value, long precision, long scale, BigInteger tenToScale)
+    {
+        String stringValue = value.toString(UTF_8);
+        BigDecimal decimal = new BigDecimal(stringValue).setScale(intScale(scale), HALF_UP);
+        if (overflows(decimal, precision)) {
+            throw new PrestoException(INVALID_CAST_ARGUMENT, format("Cannot cast CHAR '%s' to DECIMAL(%s, %s)", stringValue, precision, scale));
         }
         return encodeUnscaledValue(decimal.unscaledValue());
     }

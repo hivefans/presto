@@ -20,6 +20,7 @@ import static com.facebook.presto.spi.StandardErrorCode.DIVISION_BY_ZERO;
 import static com.facebook.presto.spi.StandardErrorCode.INVALID_CAST_ARGUMENT;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
+import static com.facebook.presto.spi.type.CharType.CHAR;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.IntegerType.INTEGER;
 import static com.facebook.presto.spi.type.RealType.REAL;
@@ -232,6 +233,14 @@ public class TestIntegerOperators
     }
 
     @Test
+    public void testCastToChar()
+            throws Exception
+    {
+        assertFunction("cast(INTEGER'37' as char)", CHAR, "37");
+        assertFunction("cast(INTEGER'17' as char)", CHAR, "17");
+    }
+
+    @Test
     public void testCastToDouble()
             throws Exception
     {
@@ -263,6 +272,15 @@ public class TestIntegerOperators
     {
         assertFunction("cast('37' as integer)", INTEGER, 37);
         assertFunction("cast('17' as integer)", INTEGER, 17);
+    }
+
+    @Test
+    public void testCastFromChar()
+            throws Exception
+    {
+        assertFunction("cast(cast('37' as char(2)) as integer)", INTEGER, 37);
+        assertFunction("cast(cast('17' as char(2)) as integer)", INTEGER, 17);
+        assertFunction("cast(cast('17 ' as char(3)) as integer)", INTEGER, 17);
     }
 
     @Test

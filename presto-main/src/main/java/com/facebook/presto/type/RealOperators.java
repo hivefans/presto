@@ -174,6 +174,14 @@ public final class RealOperators
     }
 
     @ScalarOperator(CAST)
+    @LiteralParameters("x")
+    @SqlType("char(x)")
+    public static Slice castToChar(@SqlType(StandardTypes.REAL) long value)
+    {
+        return utf8Slice(valueOf(intBitsToFloat((int) value)));
+    }
+
+    @ScalarOperator(CAST)
     @SqlType(StandardTypes.BIGINT)
     public static long castToLong(@SqlType(StandardTypes.REAL) long value)
     {

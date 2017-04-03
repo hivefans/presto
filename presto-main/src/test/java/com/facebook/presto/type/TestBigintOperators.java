@@ -18,6 +18,7 @@ import org.testng.annotations.Test;
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
+import static com.facebook.presto.spi.type.CharType.CHAR;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.RealType.REAL;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
@@ -211,6 +212,14 @@ public class TestBigintOperators
     }
 
     @Test
+    public void testCastToChar()
+            throws Exception
+    {
+        assertFunction("cast(cast(37 as bigint) as char)", CHAR, "37");
+        assertFunction("cast(cast(100000000017 as bigint) as char)", CHAR, "100000000017");
+    }
+
+    @Test
     public void testCastToDouble()
             throws Exception
     {
@@ -242,6 +251,15 @@ public class TestBigintOperators
     {
         assertFunction("cast('100000000037' as bigint)", BIGINT, 100000000037L);
         assertFunction("cast('100000000017' as bigint)", BIGINT, 100000000017L);
+    }
+
+    @Test
+    public void testCastFromChar()
+            throws Exception
+    {
+        assertFunction("cast(cast('100000000037' as char(12)) as bigint)", BIGINT, 100000000037L);
+        assertFunction("cast(cast('100000000017' as char(12)) as bigint)", BIGINT, 100000000017L);
+        assertFunction("cast(cast('100000000017 ' as char(13)) as bigint)", BIGINT, 100000000017L);
     }
 
     @Test

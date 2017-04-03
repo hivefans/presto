@@ -267,6 +267,14 @@ public final class BigintOperators
         return utf8Slice(valueOf(value));
     }
 
+    @ScalarOperator(CAST)
+    @LiteralParameters("x")
+    @SqlType("char(x)")
+    public static Slice castToChar(@SqlType(StandardTypes.BIGINT) long value)
+    {
+        return utf8Slice(valueOf(value));
+    }
+
     @ScalarOperator(HASH_CODE)
     @SqlType(StandardTypes.BIGINT)
     public static long hashCode(@SqlType(StandardTypes.BIGINT) long value)
