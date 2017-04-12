@@ -36,7 +36,7 @@ statement
     | ALTER SCHEMA qualifiedName RENAME TO identifier                  #renameSchema
     | CREATE TABLE (IF NOT EXISTS)? qualifiedName
         (COMMENT STRING)?
-        (WITH tableProperties)? AS query
+        (WITH tableProperties)? AS (query | '('query')')
         (WITH (NO)? DATA)?                                             #createTableAsSelect
     | CREATE TABLE (IF NOT EXISTS)? qualifiedName
         '(' tableElement (',' tableElement)* ')'
