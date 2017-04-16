@@ -82,7 +82,7 @@ public final class JsonOperators
                     break;
                 case VALUE_NUMBER_FLOAT:
                     // Avoidance of loss of precision does not seem to be possible here because of Jackson implementation.
-                    result = DoubleOperators.castToVarchar(parser.getDoubleValue());
+                    result = DoubleOperators.castToVarchar(Double.toString(parser.getDoubleValue()).length(), parser.getDoubleValue());
                     break;
                 case VALUE_NUMBER_INT:
                     // An alternative is calling getLongValue and then BigintOperators.castToVarchar.

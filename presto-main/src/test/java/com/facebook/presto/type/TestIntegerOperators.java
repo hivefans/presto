@@ -21,6 +21,7 @@ import static com.facebook.presto.spi.StandardErrorCode.INVALID_CAST_ARGUMENT;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
 import static com.facebook.presto.spi.type.CharType.CHAR;
+import static com.facebook.presto.spi.type.CharType.createCharType;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.IntegerType.INTEGER;
 import static com.facebook.presto.spi.type.RealType.REAL;
@@ -230,14 +231,19 @@ public class TestIntegerOperators
     {
         assertFunction("cast(INTEGER'37' as varchar)", VARCHAR, "37");
         assertFunction("cast(INTEGER'17' as varchar)", VARCHAR, "17");
+        assertNumericOverflow("cast(INTEGER'17' as varchar(1))", "Out of range for varchar(1): 17");
+        assertNumericOverflow("cast(INTEGER'-37' as varchar(2))", "Out of range for varchar(2): -37");
     }
 
     @Test
     public void testCastToChar()
             throws Exception
     {
-        assertFunction("cast(INTEGER'37' as char)", CHAR, "37");
-        assertFunction("cast(INTEGER'17' as char)", CHAR, "17");
+        assertFunction("cast(INTEGER'0' as char)", CHAR, "0");
+        assertFunction("cast(INTEGER'37' as char(2))", createCharType(2), "37");
+        assertFunction("cast(INTEGER'17' as char(2))", createCharType(2), "17");
+        assertNumericOverflow("cast(INTEGER'17' as char)", "Out of range for char(1): 17");
+        assertNumericOverflow("cast(INTEGER'-37' as char(2))", "Out of range for char(2): -37");
     }
 
     @Test

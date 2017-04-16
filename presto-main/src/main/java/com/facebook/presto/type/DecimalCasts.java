@@ -148,6 +148,11 @@ public final class DecimalCasts
                             else {
                                 tenToScale = bigIntegerTenToNth(intScale(scale));
                             }
+
+                            if (context.containsLiteral("x")) {
+                                long charSize = context.getLiteral("x");
+                                return ImmutableList.of(precision, scale, tenToScale, charSize);
+                            }
                             return ImmutableList.of(precision, scale, tenToScale);
                         })
                 )
@@ -553,26 +558,28 @@ public final class DecimalCasts
     }
 
     @UsedByGeneratedCode
-    public static Slice shortDecimalToVarchar(long decimal, long precision, long scale, long tenToScale)
+    public static Slice shortDecimalToVarchar(long decimal, long precision, long scale, long tenToScale, long charSize)
     {
-        return Slices.copiedBuffer(Decimals.toString(decimal, intScale(scale)), UTF_8);
+        String value = Decimals.toString(decimal, intScale(scale));
+        return Slices.copiedBuffer(validateValueSize(value, StandardTypes.VARCHAR, charSize), UTF_8);
     }
 
     @UsedByGeneratedCode
-    public static Slice longDecimalToVarchar(Slice decimal, long precision, long scale, BigInteger tenToScale)
+    public static Slice longDecimalToVarchar(Slice decimal, long precision, long scale, BigInteger tenToScale, long charSize)
     {
-        return Slices.copiedBuffer(Decimals.toString(decimal, intScale(scale)), UTF_8);
+        String value = Decimals.toString(decimal, intScale(scale));
+        return Slices.copiedBuffer(validateValueSize(value, StandardTypes.VARCHAR, charSize), UTF_8);
     }
 
     @UsedByGeneratedCode
-    public static Slice shortDecimalToChar(long decimal, long precision, long scale, long tenToScale)
+    public static Slice shortDecimalToChar(long decimal, long precision, long scale, long tenToScale, long x)
     {
         String value = Decimals.toString(decimal, intScale(scale));
         return Slices.copiedBuffer(validateValueSize(value, StandardTypes.CHAR, x), UTF_8);
     }
 
     @UsedByGeneratedCode
-    public static Slice longDecimalToChar(Slice decimal, long precision, long scale, BigInteger tenToScale)
+    public static Slice longDecimalToChar(Slice decimal, long precision, long scale, BigInteger tenToScale, long x)
     {
         String value = Decimals.toString(decimal, intScale(scale));
         return Slices.copiedBuffer(validateValueSize(value, StandardTypes.CHAR, x), UTF_8);

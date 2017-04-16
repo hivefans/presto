@@ -21,6 +21,7 @@ import static com.facebook.presto.spi.StandardErrorCode.INVALID_CAST_ARGUMENT;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
 import static com.facebook.presto.spi.type.CharType.CHAR;
+import static com.facebook.presto.spi.type.CharType.createCharType;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.IntegerType.INTEGER;
 import static com.facebook.presto.spi.type.RealType.REAL;
@@ -230,14 +231,19 @@ public class TestTinyintOperators
     {
         assertFunction("cast(TINYINT'37' as varchar)", VARCHAR, "37");
         assertFunction("cast(TINYINT'17' as varchar)", VARCHAR, "17");
+        assertNumericOverflow("cast(TINYINT'37' as varchar(1))", "Out of range for varchar(1): 37");
+        assertNumericOverflow("cast(TINYINT'17' as varchar(1))", "Out of range for varchar(1): 17");
     }
 
     @Test
-    public void testCastToVarcChar()
+    public void testCastToChar()
             throws Exception
     {
-        assertFunction("cast(TINYINT'37' as char)", CHAR, "37");
-        assertFunction("cast(TINYINT'17' as char)", CHAR, "17");
+        assertFunction("cast(TINYINT'0' as char)", CHAR, "0");
+        assertFunction("cast(TINYINT'37' as char(2))", createCharType(2), "37");
+        assertFunction("cast(TINYINT'17' as char(2))", createCharType(2), "17");
+        assertNumericOverflow("cast(TINYINT'37' as char)", "Out of range for char(1): 37");
+        assertNumericOverflow("cast(TINYINT'17' as char(1))", "Out of range for char(1): 17");
     }
 
     @Test

@@ -18,10 +18,11 @@ import org.testng.annotations.Test;
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
-import static com.facebook.presto.spi.type.CharType.CHAR;
+import static com.facebook.presto.spi.type.CharType.createCharType;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.RealType.REAL;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
+import static com.facebook.presto.spi.type.VarcharType.createVarcharType;
 
 public class TestDoubleOperators
         extends AbstractTestFunctions
@@ -187,14 +188,20 @@ public class TestDoubleOperators
     {
         assertFunction("cast(37.7 as varchar)", VARCHAR, "37.7");
         assertFunction("cast(17.1 as varchar)", VARCHAR, "17.1");
+        assertFunction("cast(1.20 as varchar(3))", createVarcharType(3), "1.2");
+        assertNumericOverflow("cast(17.1 as varchar(3))", "Out of range for varchar(3): 17.1");
+        assertNumericOverflow("cast(1.0 as varchar(2))", "Out of range for varchar(2): 1.0");
     }
 
     @Test
     public void testCastToChar()
             throws Exception
     {
-        assertFunction("cast(37.7 as char)", CHAR, "37.7");
-        assertFunction("cast(17.1 as char)", CHAR, "17.1");
+        assertFunction("cast(37.7 as char(4))", createCharType(4), "37.7");
+        assertFunction("cast(17.1 as char(4))", createCharType(4), "17.1");
+        assertFunction("cast(1.20 as char(3))", createCharType(3), "1.2");
+        assertNumericOverflow("cast(37.7 as char)", "Out of range for char(1): 37.7");
+        assertNumericOverflow("cast(1.0 as char(2))", "Out of range for char(2): 1.0");
     }
 
     @Test

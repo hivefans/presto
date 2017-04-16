@@ -32,9 +32,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.facebook.presto.spi.StandardErrorCode.NOT_SUPPORTED;
+import static com.facebook.presto.spi.StandardErrorCode.NUMERIC_VALUE_OUT_OF_RANGE;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
 
 public final class TypeUtils
 {
@@ -162,5 +164,13 @@ public final class TypeUtils
         if (isNull) {
             throw new PrestoException(NOT_SUPPORTED, errorMsg);
         }
+    }
+
+    public static String validateValueSize(String value, String type, long maxSize)
+    {
+        if (maxSize < value.length()) {
+            throw new PrestoException(NUMERIC_VALUE_OUT_OF_RANGE, format("Out of range for %s(%s): %s", type, maxSize, value));
+        }
+        return value;
     }
 }
