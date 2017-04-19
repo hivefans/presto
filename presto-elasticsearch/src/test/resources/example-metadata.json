@@ -1,0 +1,30 @@
+{
+    "es_schema1": [
+        {
+            "name": "fancyPantsTable",
+            "sources": [
+                {
+                    "hostAddress": "localhost",
+                    "port": 9300,
+                    "clusterName": "elasticsearch",
+                    "type": "route",
+                    "index":"route_*"
+                }
+            ]
+        }
+    ],
+    "es_schema2": [
+        {
+            "name": "fancyPantsTable2",
+            "sources": [
+                {
+                    "hostAddress": "localhost",
+                    "port": 9300,
+                    "clusterName": "elasticsearch",
+                    "type": "routebatch",
+                    "index":"routebatches_0*"
+                }
+            ]
+        }
+    ]
+}
