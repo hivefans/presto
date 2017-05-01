@@ -49,9 +49,8 @@ public class ElasticsearchQueryBuilder
 
     public ElasticsearchQueryBuilder(List<ElasticsearchColumnHandle> columnHandles, ElasticsearchSplit split, ElasticsearchClient elasticsearchClient, boolean isToAddFields)
     {
-        ElasticsearchColumnHandle tableSource = split.getUri();
-        this.index = tableSource.getColumnName();
-        this.type = tableSource.getColumnType().toString();
+        this.index = split.getSchemaName();
+        this.type = split.getTableName();
         this.client = elasticsearchClient.client;
         this.tupleDomain = split.getTupleDomain();
         this.columns = columnHandles;
