@@ -224,7 +224,7 @@ public class ElasticsearchRecordCursor
     //https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-get.html
     private void extractFromHitField(SearchHit hit)
     {
-        GetResponse response = client.prepareGet(split.getSchemaName(), split.getTableName(), "1").get();
+        GetResponse response = client.prepareGet(split.getSchemaName(), split.getTableName(), hit.getId()).get();
         Map<String, Object> map = response.getSourceAsMap();
         for (String key : map.keySet()) {
             setFieldIfExists(key, map.get(key));

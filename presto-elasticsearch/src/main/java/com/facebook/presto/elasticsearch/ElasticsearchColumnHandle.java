@@ -27,34 +27,22 @@ import static java.util.Objects.requireNonNull;
 public final class ElasticsearchColumnHandle
         implements ColumnHandle
 {
-    private final String connectorId;
     private final String columnName;
     private final Type columnType;
-    private final String columnJsonPath;
     private final String columnJsonType;
     private final int ordinalPosition;
 
     @JsonCreator
     public ElasticsearchColumnHandle(
-            @JsonProperty("connectorId") String connectorId,
             @JsonProperty("columnName") String columnName,
             @JsonProperty("columnType") Type columnType,
-            @JsonProperty("columnJsonPath") String columnJsonPath,
             @JsonProperty("columnJsonType") String columnJsonType,
             @JsonProperty("ordinalPosition") int ordinalPosition)
     {
-        this.connectorId = requireNonNull(connectorId, "connectorId is null");
         this.columnName = requireNonNull(columnName, "columnName is null");
         this.columnType = requireNonNull(columnType, "columnType is null");
-        this.columnJsonPath = requireNonNull(columnJsonPath, "columnJsonPath is null");
         this.columnJsonType = requireNonNull(columnJsonType, "columnJsonType is null");
         this.ordinalPosition = ordinalPosition;
-    }
-
-    @JsonProperty
-    public String getConnectorId()
-    {
-        return connectorId;
     }
 
     @JsonProperty
@@ -67,12 +55,6 @@ public final class ElasticsearchColumnHandle
     public Type getColumnType()
     {
         return columnType;
-    }
-
-    @JsonProperty
-    public String getColumnJsonPath()
-    {
-        return columnJsonPath;
     }
 
     @JsonProperty
@@ -95,7 +77,7 @@ public final class ElasticsearchColumnHandle
     @Override
     public int hashCode()
     {
-        return Objects.hash(connectorId, columnName);
+        return Objects.hash(columnName);
     }
 
     @Override
@@ -109,18 +91,15 @@ public final class ElasticsearchColumnHandle
         }
 
         ElasticsearchColumnHandle other = (ElasticsearchColumnHandle) obj;
-        return Objects.equals(this.connectorId, other.connectorId) &&
-                Objects.equals(this.columnName, other.columnName);
+        return Objects.equals(this.columnName, other.columnName);
     }
 
     @Override
     public String toString()
     {
         return toStringHelper(this)
-                .add("connectorId", connectorId)
                 .add("columnName", columnName)
                 .add("columnType", columnType)
-                .add("columnJsonPath", columnJsonPath)
                 .add("columnJsonType", columnJsonType)
                 .add("ordinalPosition", ordinalPosition)
                 .toString();

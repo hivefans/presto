@@ -27,7 +27,6 @@ public class ElasticsearchTable
 {
     private final String name;
 
-    private List<ElasticsearchColumn> columns;
     private final List<ElasticsearchColumnHandle> sources;
     private final List<ColumnMetadata> columnMetadatas;
 
@@ -46,17 +45,6 @@ public class ElasticsearchTable
     public String getName()
     {
         return name;
-    }
-
-    @JsonProperty
-    public List<ElasticsearchColumn> getColumns()
-    {
-        return columns;
-    }
-
-    public void setColumns(List<ElasticsearchColumn> columns)
-    {
-        this.columns = columns;
     }
 
     @JsonProperty

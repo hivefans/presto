@@ -42,15 +42,6 @@ public class ElasticsearchRecordSet
             types.add(column.getColumnType());
         }
         this.columnTypes = types.build();
-
-        /*
-        try {
-            byteSource = Resources.asByteSource(split.getUri().toURL());
-        }
-        catch (MalformedURLException e) {
-            throw Throwables.propagate(e);
-        }
-        */
     }
 
     @Override

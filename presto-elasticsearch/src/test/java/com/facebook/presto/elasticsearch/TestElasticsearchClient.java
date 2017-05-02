@@ -56,7 +56,7 @@ public class TestElasticsearchClient
     {
         ElasticsearchTable table = client.getTable(ES_SCHEMA1, ES_TBL_1);
         assertNotNull(table);
-        assertNotNull(table.getColumns());
+        assertNotNull(table.getColumnMetadatas());
         // assertEquals(table.getColumns().size(), EXPECTED_NR_OF_COLUMNS);
     }
 
@@ -66,7 +66,7 @@ public class TestElasticsearchClient
     {
         ElasticsearchTable table = client.getTable(ES_SCHEMA2, ES_TBL_2);
         assertNotNull(table);
-        assertNotNull(table.getColumns());
+        assertNotNull(table.getColumnMetadatas());
         // assertEquals(table.getColumns().size(), EXPECTED_NR_OF_COLUMNS);
     }
 }

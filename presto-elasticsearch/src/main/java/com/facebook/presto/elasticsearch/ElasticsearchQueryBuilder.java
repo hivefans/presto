@@ -14,6 +14,7 @@
 package com.facebook.presto.elasticsearch;
 
 import com.facebook.presto.spi.ColumnHandle;
+import com.facebook.presto.spi.predicate.Domain;
 import com.facebook.presto.spi.predicate.TupleDomain;
 import com.facebook.presto.spi.type.BigintType;
 import com.facebook.presto.spi.type.BooleanType;
@@ -22,21 +23,18 @@ import com.facebook.presto.spi.type.IntegerType;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
 import com.google.common.base.Strings;
-import io.airlift.log.Logger;
-import io.airlift.slice.Slice;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.List;
 
 public class ElasticsearchQueryBuilder
 {
-    private static final Logger log = Logger.get(ElasticsearchQueryBuilder.class);
-
     private static final int SCROLL_TIME = 60000;
     private static final int SCROLL_SIZE = 5000;
 
@@ -65,7 +63,7 @@ public class ElasticsearchQueryBuilder
                     .setTypes(type)
                     .setSearchType(SearchType.DEFAULT)
                     .setScroll(new TimeValue(SCROLL_TIME))
-//                    .setQuery(getSearchQuery())
+                    .setQuery(getSearchQuery())
                     .setSize(SCROLL_SIZE); // per shard
 
         // elasticsearch doesn't support adding fields when there is a nested type
@@ -85,47 +83,40 @@ public class ElasticsearchQueryBuilder
             .setScroll(new TimeValue(SCROLL_TIME));
     }
 
+    // todo: Develop filtering in Elasticsearch layer. Refer QueryBuilder.java
     private BoolQueryBuilder getSearchQuery()
     {
-        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-//
-//        for (ElasticsearchColumnHandle column : columns) {
-//            boolQueryBuilder.must(addFilter(column.getColumnJsonPath(), domain, type));
-//            Type type = column.getColumnType();
-//            tupleDomain
-//                .getDomains()
-//                .ifPresent((e) -> {
-//                    Domain domain = e.get(column);
-//                    if (domain != null) {
-//                      boolQueryBuilder.must(addFilter(column.getColumnJsonPath(), domain, type));
-//                    }
-//                });
-//        }
-//
-//        return QueryBuilders.filteredQuery(
-//          QueryBuilders.matchAllQuery(),
-//          boolQueryBuilder.hasClauses()
-//              ? boolQueryBuilder
-//              : FilterBuilders.matchAllFilter());
-        return boolQueryBuilder;
+        BoolQueryBuilder boolFilterBuilder = new BoolQueryBuilder();
+
+        for (ElasticsearchColumnHandle column : columns) {
+            tupleDomain
+                    .getDomains()
+                    .ifPresent((e) -> {
+                        Domain domain = e.get(column);
+                        if (domain != null) {
+//                            boolFilterBuilder.must(QueryBuilders.termQuery(column.getColumnName(), "kimchy"));
+                        }
+                    });
+        }
+        return boolFilterBuilder;
     }
 
-    private Object getValue(Type type, Object value)
+    private boolean isAcceptedType(Type type)
     {
         if (type.equals(BigintType.BIGINT)) {
-            return (long) value;
+            return true;
         }
         else if (type.equals(IntegerType.INTEGER)) {
-            return ((Number) value).intValue();
+            return true;
         }
         else if (type.equals(DoubleType.DOUBLE)) {
-            return (double) value;
+            return true;
         }
         else if (type.equals(VarcharType.VARCHAR)) {
-            return ((Slice) value).toStringUtf8();
+            return true;
         }
         else if (type.equals(BooleanType.BOOLEAN)) {
-            return (boolean) value;
+            return true;
         }
         else {
            throw new UnsupportedOperationException("Query Builder can't handle type: " + type);
