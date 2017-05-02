@@ -24,7 +24,6 @@ import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import javax.inject.Inject;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static com.facebook.presto.elasticsearch.Types.checkType;
@@ -54,12 +53,7 @@ public class ElasticsearchSplitManager
         checkState(table != null, "Table %s.%s no longer exists", tableHandle.getSchemaName(), tableHandle.getTableName());
 
         List<ConnectorSplit> splits = new ArrayList<>();
-        for (ElasticsearchColumnHandle uri : table.getSources()) {
-            int clmsCount = table.getSources().size();
-            splits.add(new ElasticsearchSplit(connectorId, tableHandle.getSchemaName(), tableHandle.getTableName(), uri, layoutHandle.getTupleDomain()));
-        }
-        Collections.shuffle(splits);
-
+        splits.add(new ElasticsearchSplit(connectorId, tableHandle.getSchemaName(), tableHandle.getTableName(), layoutHandle.getTupleDomain()));
         return new FixedSplitSource(splits);
     }
 }

@@ -17,9 +17,10 @@ import com.facebook.presto.spi.RecordCursor;
 import com.facebook.presto.spi.type.Type;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHitField;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
@@ -40,21 +41,25 @@ import static com.google.common.base.Preconditions.checkState;
 public class ElasticsearchRecordCursor
         implements RecordCursor
 {
+    private final ElasticsearchSplit split;
     private final List<ElasticsearchColumnHandle> columnHandles;
     private final Map<String, Integer> jsonPathToIndex;
     private final Iterator<SearchHit> lines;
     private long totalBytes;
     private List<Object> fields;
     private final boolean isFieldQuery;
+    private final Client client;
 
     public ElasticsearchRecordCursor(List<ElasticsearchColumnHandle> columnHandles, ElasticsearchSplit split, ElasticsearchClient elasticsearchClient)
     {
+        this.split = split;
         this.columnHandles = columnHandles;
         this.jsonPathToIndex = new HashMap();
         this.totalBytes = 0;
+        this.client = elasticsearchClient.client;
 
         for (int i = 0; i < columnHandles.size(); i++) {
-            this.jsonPathToIndex.put(columnHandles.get(i).getColumnJsonPath(), i);
+            this.jsonPathToIndex.put(columnHandles.get(i).getColumnName(), i);
         }
 
         // in elasticsearch when there is nested types it is not possible to add fields in queries
@@ -186,7 +191,7 @@ public class ElasticsearchRecordCursor
 
         //Scroll until no hits are returned
         while (true) {
-            for (SearchHit hit : scrollResp.getHits().getHits()) {
+            for (SearchHit hit : scrollResp.getHits()) {
                 result.add(hit);
             }
 
@@ -216,19 +221,19 @@ public class ElasticsearchRecordCursor
         return fields.get(field);
     }
 
+    //https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-get.html
     private void extractFromHitField(SearchHit hit)
     {
-        Map<String, SearchHitField> map = hit.getFields();
-        for (Map.Entry<String, SearchHitField> entry : map.entrySet()) {
-            String jsonPath = entry.getKey().toString();
-            Object entryValue = entry.getValue().getValue();
-
-            setFieldIfExists(jsonPath, entryValue);
+        GetResponse response = client.prepareGet(split.getSchemaName(), split.getTableName(), "1").get();
+        Map<String, Object> map = response.getSourceAsMap();
+        for (String key : map.keySet()) {
+            setFieldIfExists(key, map.get(key));
         }
     }
 
     private void extractFromSource(SearchHit hit)
     {
+        System.out.println(hit.getFields());
         Map<String, Object> map = hit.getSource();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String jsonPath = entry.getKey().toString();

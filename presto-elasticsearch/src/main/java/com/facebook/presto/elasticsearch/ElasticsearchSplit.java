@@ -31,7 +31,6 @@ public class ElasticsearchSplit
     private final String connectorId;
     private final String schemaName;
     private final String tableName;
-    private final ElasticsearchColumnHandle uri;
     private final boolean remotelyAccessible;
     private final ImmutableList<HostAddress> addresses;
     private final TupleDomain<ColumnHandle> tupleDomain;
@@ -41,18 +40,14 @@ public class ElasticsearchSplit
             @JsonProperty("connectorId") String connectorId,
             @JsonProperty("schemaName") String schemaName,
             @JsonProperty("tableName") String tableName,
-            @JsonProperty("uri") ElasticsearchColumnHandle uri,
             @JsonProperty("tupleDomain") TupleDomain<ColumnHandle> tupleDomain)
     {
         this.schemaName = requireNonNull(schemaName, "schema name is null");
         this.connectorId = requireNonNull(connectorId, "connector id is null");
         this.tableName = requireNonNull(tableName, "table name is null");
-        this.uri = requireNonNull(uri, "uri is null");
         this.tupleDomain = requireNonNull(tupleDomain, "tupleDomain is null");
 
-//        if ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme())) {
         remotelyAccessible = true;
-        //addresses = ImmutableList.of(HostAddress.fromUri(uri));
         addresses = ImmutableList.of();
     }
 
@@ -72,12 +67,6 @@ public class ElasticsearchSplit
     public String getTableName()
     {
         return tableName;
-    }
-
-    @JsonProperty
-    public ElasticsearchColumnHandle getUri()
-    {
-        return uri;
     }
 
     @JsonProperty

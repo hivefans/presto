@@ -21,6 +21,7 @@ import com.facebook.presto.spi.type.DoubleType;
 import com.facebook.presto.spi.type.IntegerType;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
+import com.google.common.base.Strings;
 import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -60,11 +61,11 @@ public class ElasticsearchQueryBuilder
     public SearchRequestBuilder buildScrollSearchRequest()
     {
         SearchRequestBuilder searchRequestBuilder = client
-                    .prepareSearch(index != null && !index.isEmpty() ? index : "_all")
+                    .prepareSearch(Strings.isNullOrEmpty(index) ? "_all" : index)
                     .setTypes(type)
                     .setSearchType(SearchType.DEFAULT)
                     .setScroll(new TimeValue(SCROLL_TIME))
-                    .setQuery(getSearchQuery())
+//                    .setQuery(getSearchQuery())
                     .setSize(SCROLL_SIZE); // per shard
 
         // elasticsearch doesn't support adding fields when there is a nested type
@@ -87,8 +88,9 @@ public class ElasticsearchQueryBuilder
     private BoolQueryBuilder getSearchQuery()
     {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-
+//
 //        for (ElasticsearchColumnHandle column : columns) {
+//            boolQueryBuilder.must(addFilter(column.getColumnJsonPath(), domain, type));
 //            Type type = column.getColumnType();
 //            tupleDomain
 //                .getDomains()
@@ -105,7 +107,6 @@ public class ElasticsearchQueryBuilder
 //          boolQueryBuilder.hasClauses()
 //              ? boolQueryBuilder
 //              : FilterBuilders.matchAllFilter());
-//
         return boolQueryBuilder;
     }
 
