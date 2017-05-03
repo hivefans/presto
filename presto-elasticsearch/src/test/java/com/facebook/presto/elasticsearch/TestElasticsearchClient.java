@@ -13,12 +13,8 @@
  */
 package com.facebook.presto.elasticsearch;
 
-import com.google.common.io.Resources;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.net.URI;
-import java.net.URL;
 
 import static com.facebook.presto.elasticsearch.ElasticsearchTestConstants.ES_SCHEMA1;
 import static com.facebook.presto.elasticsearch.ElasticsearchTestConstants.ES_SCHEMA2;
@@ -35,10 +31,6 @@ public class TestElasticsearchClient
     public void setUp()
             throws Exception
     {
-        URL metadataUrl = Resources.getResource(TestElasticsearchClient.class, "/example-metadata.json");
-        assertNotNull(metadataUrl, "metadataUrl is null");
-        URI metadata = metadataUrl.toURI();
-
         client = new ElasticsearchClient(new ElasticsearchConfig());
     }
 

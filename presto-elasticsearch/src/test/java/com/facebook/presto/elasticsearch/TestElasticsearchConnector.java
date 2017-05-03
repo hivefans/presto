@@ -18,19 +18,12 @@ import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.ConnectorSplitSource;
 import com.facebook.presto.spi.ConnectorTableHandle;
-import com.facebook.presto.spi.ConnectorTableLayoutHandle;
-import com.facebook.presto.spi.ConnectorTableLayoutResult;
-import com.facebook.presto.spi.ConnectorTableMetadata;
-import com.facebook.presto.spi.Constraint;
 import com.facebook.presto.spi.RecordCursor;
-import com.facebook.presto.spi.SchemaNotFoundException;
 import com.facebook.presto.spi.SchemaTableName;
-import com.facebook.presto.spi.SchemaTablePrefix;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.facebook.presto.spi.connector.ConnectorRecordSetProvider;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
-import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.testing.TestingConnectorContext;
 import com.google.common.collect.ImmutableList;
@@ -40,14 +33,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.net.URI;
 import java.net.URL;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
+import static com.facebook.presto.elasticsearch.EmbeddedElasticsearch.HOST;
+import static com.facebook.presto.elasticsearch.EmbeddedElasticsearch.PORT;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
@@ -57,21 +47,14 @@ import static com.facebook.presto.spi.type.VarbinaryType.VARBINARY;
 import static com.facebook.presto.spi.type.Varchars.isVarcharType;
 import static com.facebook.presto.testing.TestingConnectorSession.SESSION;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static io.airlift.concurrent.MoreFutures.getFutureValue;
-import static io.airlift.testing.Assertions.assertInstanceOf;
-import static java.util.Locale.ENGLISH;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 @Test(singleThreaded = true)
 public class TestElasticsearchConnector
 {
-    protected static final String INVALID_DATABASE = "totally_invalid_database";
-    private static final Date DATE = new Date();
     protected String database;
     protected SchemaTableName table;
     protected SchemaTableName tableUnpartitioned;
@@ -79,18 +62,15 @@ public class TestElasticsearchConnector
     private ConnectorMetadata metadata;
     private ConnectorSplitManager splitManager;
     private ConnectorRecordSetProvider recordSetProvider;
+    private static final String DATABASE_NAME = "test";
+    private static final String TABLE_NAME = "product";
+    private static ElasticsearchClient client;
 
     @BeforeClass
     public void setup()
             throws Exception
     {
-//        EmbeddedCassandraServerHelper.startEmbeddedCassandra();
-//        String keyspace = "test_connector";
-//        initializeTestData(DATE, keyspace);
-
-        URL metadataUrl = Resources.getResource(TestElasticsearchClient.class, "/example-metadata.json");
-        assertNotNull(metadataUrl, "metadataUrl is null");
-        URI metadataUri = metadataUrl.toURI();
+        EmbeddedElasticsearch.start();
 
         String connectorId = "elasticsearch-test";
         ElasticsearchConnectorFactory connectorFactory = new ElasticsearchConnectorFactory(
@@ -100,17 +80,25 @@ public class TestElasticsearchConnector
 
         Connector connector = connectorFactory.create(
                 connectorId,
-                ImmutableMap.of("elasticsearch.metadata-uri", metadataUri.toString()),
+                ImmutableMap.of(
+                        "connection-hostname", HOST,
+                        "connection-port", PORT.toString()),
                 new TestingConnectorContext());
 
+        // https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-admin-indices.html
+        URL metadataUrl = Resources.getResource(TestElasticsearchClient.class, "/definition.json");
+        String definition = Resources.toString(metadataUrl, UTF_8);
+        EmbeddedElasticsearch.getClient().admin().indices()
+                .prepareCreate(DATABASE_NAME)
+                .addMapping(TABLE_NAME, definition)
+                .get();
+
+        client = new ElasticsearchClient(EmbeddedElasticsearch.getClient());
         metadata = connector.getMetadata(ElasticsearchTransactionHandle.INSTANCE);
-        assertInstanceOf(metadata, ElasticsearchMetadata.class);
 
         splitManager = connector.getSplitManager();
-        assertInstanceOf(splitManager, ElasticsearchSplitManager.class);
 
         recordSetProvider = connector.getRecordSetProvider();
-        assertInstanceOf(recordSetProvider, ElasticsearchRecordSetProvider.class);
 
         database = ElasticsearchTestConstants.ES_SCHEMA1;
         table = new SchemaTableName(database, ElasticsearchTestConstants.ES_TBL_1);
@@ -125,103 +113,24 @@ public class TestElasticsearchConnector
     }
 
     @Test
-    public void testGetClient()
-    {
-    }
-
-    @Test
     public void testGetDatabaseNames()
             throws Exception
     {
-        List<String> databases = metadata.listSchemaNames(SESSION);
-        assertTrue(databases.contains(database.toLowerCase(ENGLISH)));
+        assertEquals(ImmutableList.of(DATABASE_NAME), client.getSchemaNames());
     }
 
     @Test
     public void testGetTableNames()
             throws Exception
     {
-        List<SchemaTableName> tables = metadata.listTables(SESSION, database);
-        assertTrue(tables.contains(table));
-    }
-
-    // disabled until metadata manager is updated to handle invalid catalogs and schemas
-    @Test(enabled = false, expectedExceptions = SchemaNotFoundException.class)
-    public void testGetTableNamesException()
-            throws Exception
-    {
-        metadata.listTables(SESSION, INVALID_DATABASE);
-    }
-
-    @Test
-    public void testListUnknownSchema()
-    {
-        assertNull(metadata.getTableHandle(SESSION, new SchemaTableName("totally_invalid_database_name", "dual")));
-        assertEquals(metadata.listTables(SESSION, "totally_invalid_database_name"), ImmutableList.of());
-        assertEquals(metadata.listTableColumns(SESSION, new SchemaTablePrefix("totally_invalid_database_name", "dual")), ImmutableMap.of());
+        assertEquals(ImmutableList.of(TABLE_NAME), client.getAllTables(DATABASE_NAME));
+        assertEquals(ImmutableList.of(), client.getAllTables("invalid_database"));
     }
 
     @Test
     public void testGetRecords()
             throws Exception
     {
-        ConnectorTableHandle tableHandle = getTableHandle(table);
-        ConnectorTableMetadata tableMetadata = metadata.getTableMetadata(SESSION, tableHandle);
-        List<ColumnHandle> columnHandles = ImmutableList.copyOf(metadata.getColumnHandles(SESSION, tableHandle).values());
-        Map<String, Integer> columnIndex = indexColumns(columnHandles);
-
-        ConnectorTransactionHandle transaction = ElasticsearchTransactionHandle.INSTANCE;
-
-        List<ConnectorTableLayoutResult> layouts = metadata.getTableLayouts(SESSION, tableHandle, Constraint.alwaysTrue(), Optional.empty());
-        ConnectorTableLayoutHandle layout = getOnlyElement(layouts).getTableLayout().getHandle();
-        List<ConnectorSplit> splits = getAllSplits(splitManager.getSplits(transaction, SESSION, layout));
-
-        long rowNumber = 0;
-        for (ConnectorSplit split : splits) {
-            ElasticsearchSplit elasticsearchSplit = (ElasticsearchSplit) split;
-
-            long completedBytes = 0;
-            try (RecordCursor cursor = recordSetProvider.getRecordSet(transaction, SESSION, elasticsearchSplit, columnHandles).cursor()) {
-                assertTrue(cursor.advanceNextPosition(), "The cursor must return at least one result");
-                do {
-                    try {
-                        assertReadFields(cursor, tableMetadata.getColumns());
-                    }
-                    catch (RuntimeException e) {
-                        throw new RuntimeException("row " + rowNumber, e);
-                    }
-
-                    rowNumber++;
-
-                    UUID docId = UUID.fromString(cursor.getSlice(columnIndex.get("_id")).toStringUtf8());
-                    assertNotNull(docId);
-
-                    String docIndex = cursor.getSlice(columnIndex.get("_index")).toStringUtf8();
-                    assertNotNull(docIndex);
-                    assertTrue(docIndex.contains("route"));
-
-//                    int rowId = Integer.parseInt(keyValue.substring(4));
-//
-//                    assertEquals(keyValue, String.format("key %d", rowId));
-
-//                    assertEquals(Bytes.toHexString(cursor.getSlice(columnIndex.get("typebytes")).getBytes()), String.format("0x%08X", rowId));
-
-                    // VARINT is returned as a string
-//                    assertEquals(cursor.getSlice(columnIndex.get("typeinteger")).toStringUtf8(), String.valueOf(rowId));
-//
-//                    assertEquals(cursor.getLong(columnIndex.get("typelong")), 1000 + rowId);
-//
-//                    assertEquals(cursor.getSlice(columnIndex.get("typeuuid")).toStringUtf8(), String.format("00000000-0000-0000-0000-%012d", rowId));
-//
-//                    assertEquals(cursor.getSlice(columnIndex.get("typetimestamp")).toStringUtf8(), Long.valueOf(DATE.getTime()).toString());
-
-                    long newCompletedBytes = cursor.getCompletedBytes();
-                    assertTrue(newCompletedBytes >= completedBytes);
-                    completedBytes = newCompletedBytes;
-                }while(cursor.advanceNextPosition() && rowNumber < 25);
-            }
-        }
-//        assertEquals(rowNumber, 9);
     }
 
     private static void assertReadFields(RecordCursor cursor, List<ColumnMetadata> schema)

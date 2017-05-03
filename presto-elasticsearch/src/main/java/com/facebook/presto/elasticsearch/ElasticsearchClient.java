@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
@@ -53,8 +52,13 @@ public class ElasticsearchClient
             throws IOException
     {
         requireNonNull(config, "config is null");
-
         this.client = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(config.getHostname()), config.getPort()));
+    }
+
+    public ElasticsearchClient(Client client)
+    {
+        requireNonNull(client, "client is null");
+        this.client = client;
     }
 
     public List<String> getSchemaNames()
@@ -62,14 +66,21 @@ public class ElasticsearchClient
         return Arrays.asList(client.admin().cluster().prepareState().execute().actionGet().getState().getMetaData().getConcreteAllIndices());
     }
 
-    public Optional<List<String>> getAllTables(String databaseName)
+    public List<String> getAllTables(String databaseName)
     {
+        // TODO: this logic is not efficient
         List<String> tables = new ArrayList<>();
         ImmutableOpenMap<String, IndexMetaData> res = client.admin().cluster().prepareState().get().getState().getMetaData().getIndices();
         for (String indice : res.keys().toArray(String.class)) {
-            tables.add(indice);
+            if (!indice.equals(databaseName)) {
+                continue;
+            }
+
+            for (ObjectObjectCursor<String, MappingMetaData> mapping : res.get(indice).getMappings()) {
+                tables.add(mapping.key);
+            }
         }
-        return Optional.of(ImmutableList.copyOf(tables));
+        return ImmutableList.copyOf(tables);
     }
 
     public ElasticsearchTable getTable(String schema, String tableName)

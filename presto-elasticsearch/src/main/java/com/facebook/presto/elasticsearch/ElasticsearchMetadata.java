@@ -28,7 +28,6 @@ import com.facebook.presto.spi.TableNotFoundException;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.airlift.log.Logger;
 
 import javax.inject.Inject;
 
@@ -39,15 +38,12 @@ import java.util.Set;
 
 import static com.facebook.presto.elasticsearch.Types.checkType;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 public class ElasticsearchMetadata
         implements ConnectorMetadata
 {
-    private final Logger log = Logger.get(ElasticsearchMetadata.class);
     private final String connectorId;
-
     private final ElasticsearchClient elasticsearchClient;
 
     @Inject
@@ -112,7 +108,7 @@ public class ElasticsearchMetadata
     {
         ImmutableList.Builder<SchemaTableName> tableNames = ImmutableList.builder();
         for (String schemaName : listSchemas(session, schemaNameOrNull)) {
-            for (String tableName : elasticsearchClient.getAllTables(schemaName).orElse(emptyList())) {
+            for (String tableName : elasticsearchClient.getAllTables(schemaName)) {
                 tableNames.add(new SchemaTableName(schemaName, tableName));
             }
         }

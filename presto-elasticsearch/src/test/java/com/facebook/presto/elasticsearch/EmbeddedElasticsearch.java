@@ -13,11 +13,13 @@
  */
 package com.facebook.presto.elasticsearch;
 
+import io.airlift.testing.FileUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -28,8 +30,9 @@ public final class EmbeddedElasticsearch
 {
     private static Node elasticServer;
 
-    private static final String HOST = "127.0.0.1";
-    private static final int PORT = 9300;
+    public static final String HOST = "localhost";
+    public static final Integer PORT = 19300;
+    public static final String DATA_PATH = "target/elasticsearch-data";
     private static boolean initialized;
 
     private EmbeddedElasticsearch()
@@ -48,9 +51,18 @@ public final class EmbeddedElasticsearch
         if (initialized) {
             return;
         }
+        FileUtils.deleteDirectoryContents(new File(DATA_PATH));
 
-        Settings settings = Settings.builder().put("cluster.name", "presto-test-cluster").build();
+        // http://stackoverflow.com/questions/41298467/how-to-start-elasticsearch-5-1-embedded-in-my-java-application
+        Settings settings = Settings.builder()
+                .put("transport.type", "local")
+                .put("http.enabled", "false")
+                .put("path.home", DATA_PATH)
+                .put("transport.bind_host", HOST)
+                .put("transport.tcp.port", PORT)
+                .build();
         elasticServer = new Node(settings);
+
         elasticServer.start();
 
         initialized = true;
@@ -88,7 +100,7 @@ public final class EmbeddedElasticsearch
 
     private static void checkIsInitialized()
     {
-        checkState(initialized, "EmbeddedCassandra must be started with #start() method before retrieving the cluster retrieval");
+        checkState(initialized, "EmbeddedElasticsearch must be started with #start() method before retrieving the cluster retrieval");
     }
 
     public static void flush(String keyspace, String table)

@@ -46,10 +46,12 @@ public final class ElasticsearchQueryRunner
         queryRunner.createCatalog("tpch", "tpch");
 
         queryRunner.installPlugin(new ElasticsearchPlugin());
-        queryRunner.createCatalog("cassandra", "cassandra", ImmutableMap.of(
-                "cassandra.hostname", EmbeddedElasticsearch.getHost(),
-                "cassandra.native-protocol-port", Integer.toString(EmbeddedElasticsearch.getPort()),
-                "cassandra.allow-drop-table", "true"));
+        queryRunner.createCatalog(
+                "elasticsearch",
+                "elasticsearch",
+                ImmutableMap.of(
+                        "connection-hostname", EmbeddedElasticsearch.getHost(),
+                        "connection-port", Integer.toString(EmbeddedElasticsearch.getPort())));
 
         if (!tpchLoaded) {
             createKeyspace(EmbeddedElasticsearch.getClient(), "tpch");
@@ -67,7 +69,7 @@ public final class ElasticsearchQueryRunner
     public static Session createCassandraSession(String schema)
     {
         return testSessionBuilder()
-                .setCatalog("elaticsearch")
+                .setCatalog("elasticsearch")
                 .setSchema(schema)
                 .build();
     }
