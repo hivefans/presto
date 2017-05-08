@@ -144,6 +144,17 @@ public class TestJsonOperators
     }
 
     @Test
+    public void testCastFromReal()
+            throws Exception
+    {
+        assertFunction("cast(cast (null as REAL) as JSON)", JSON, null);
+        assertFunction("cast(cast (3.14 as REAL) as JSON)", JSON, "3.14");
+        assertFunction("cast(cast (nan() as REAL) as JSON)", JSON, "\"NaN\"");
+        assertFunction("cast(cast (infinity() as REAL) as JSON)", JSON, "\"Infinity\"");
+        assertFunction("cast(cast (-infinity() as REAL) as JSON)", JSON, "\"-Infinity\"");
+    }
+
+    @Test
     public void testCastToDecimal()
             throws Exception
     {
