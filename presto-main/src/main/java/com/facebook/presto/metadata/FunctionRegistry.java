@@ -253,6 +253,7 @@ import static com.facebook.presto.operator.window.AggregateWindowFunction.suppli
 import static com.facebook.presto.spi.StandardErrorCode.AMBIGUOUS_FUNCTION_CALL;
 import static com.facebook.presto.spi.StandardErrorCode.FUNCTION_IMPLEMENTATION_MISSING;
 import static com.facebook.presto.spi.StandardErrorCode.FUNCTION_NOT_FOUND;
+import static com.facebook.presto.spi.StandardErrorCode.NOT_SUPPORTED;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
@@ -357,6 +358,9 @@ public class FunctionRegistry
                     {
                         // TODO the function map should be updated, so that this cast can be removed
                         SqlScalarFunction scalarFunction = (SqlScalarFunction) key.getFunction();
+                        if (key.getArity() > 250) {
+                            throw new PrestoException(NOT_SUPPORTED, format("There are too many arguments. The max size is 250 but got %s", key.getArity()));
+                        }
                         return scalarFunction.specialize(key.getBoundVariables(), key.getArity(), typeManager, FunctionRegistry.this);
                     }
                 });
@@ -615,6 +619,10 @@ public class FunctionRegistry
 
     public Signature resolveFunction(QualifiedName name, List<TypeSignatureProvider> parameterTypes)
     {
+        if (parameterTypes.size() > 250) {
+            throw new PrestoException(NOT_SUPPORTED, format("There are too many arguments. The max size is 250 but got %s", parameterTypes.size()));
+        }
+
         Collection<SqlFunction> allCandidates = functions.get(name);
         List<SqlFunction> exactCandidates = allCandidates.stream()
                 .filter(function -> function.getSignature().getTypeVariableConstraints().isEmpty())

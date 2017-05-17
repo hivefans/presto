@@ -8517,4 +8517,21 @@ public abstract class AbstractTestQueries
                         "WHERE a = 1)",
                 "VALUES 3008750");
     }
+
+    @Test
+    public void testTooManyArguments()
+    {
+//        assertQueryFails(format("SELECT array[ %s ]", increaseWord("rand()", 251)), "There are too many arguments. The max size is 250 but got 251");
+        assertQueryFails(format("SELECT zip( %s )", increaseWord("array[1]", 251)), "There are too many arguments. The max size is 250 but got 251");
+    }
+
+    private static String increaseWord(String word, Integer size)
+    {
+        StringBuilder sb = new StringBuilder(word);
+        for (int i =1; i<size; i++)
+        {
+            sb.append(",").append(word);
+        }
+        return sb.toString();
+    }
 }
