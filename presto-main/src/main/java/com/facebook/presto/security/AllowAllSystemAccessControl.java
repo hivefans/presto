@@ -157,6 +157,11 @@ public class AllowAllSystemAccessControl
     }
 
     @Override
+    public void checkCanTruncateTable(Identity identity, CatalogSchemaTableName table)
+    {
+    }
+
+    @Override
     public void checkCanCreateView(Identity identity, CatalogSchemaTableName view)
     {
     }

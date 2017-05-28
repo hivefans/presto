@@ -195,6 +195,12 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
+    public void truncateTable(Session session, TableHandle tableHandle)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public TableIdentity getTableIdentity(Session session, TableHandle tableHandle)
     {
         throw new UnsupportedOperationException();
