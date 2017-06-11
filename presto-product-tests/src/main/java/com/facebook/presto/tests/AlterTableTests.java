@@ -98,11 +98,11 @@ public class AlterTableTests
     }
 
     @Test(groups = {ALTER_TABLE, SMOKE})
-    public void dropolumn()
+    public void dropColumn()
     {
         query(format("CREATE TABLE %s AS SELECT n_nationkey, n_regionkey FROM nation", TABLE_NAME));
 
-        assertThat(query(format("SELECT count(nationkey) FROM %s", TABLE_NAME)))
+        assertThat(query(format("SELECT count(n_nationkey) FROM %s", TABLE_NAME)))
                 .containsExactly(row(25));
         assertThat(query(format("ALTER TABLE %s DROP COLUMN n_nationkey", TABLE_NAME)))
                 .hasRowsCount(1);

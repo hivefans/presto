@@ -136,7 +136,7 @@ public interface HiveMetastore
 
         int columnSize = table.get().getSd().getColsSize() - partitionNames.map(List::size).orElse(0);
         if (columnSize <= 1) {
-            throw new PrestoException(NOT_SUPPORTED, "Cannot drop the only data column in a table");
+            throw new PrestoException(NOT_SUPPORTED, "Cannot drop the only column in a table");
         }
     }
 }

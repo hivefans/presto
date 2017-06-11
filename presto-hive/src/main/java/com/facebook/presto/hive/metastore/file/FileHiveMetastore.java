@@ -441,7 +441,7 @@ public class FileHiveMetastore
                 }
             }
             if (oldTable.getDataColumns().size() == 1) {
-                throw new PrestoException(NOT_SUPPORTED, "Cannot drop the only data column in a table");
+                throw new PrestoException(NOT_SUPPORTED, "Cannot drop the only column in a table");
             }
 
             ImmutableList.Builder<Column> newDataColumns = ImmutableList.builder();
