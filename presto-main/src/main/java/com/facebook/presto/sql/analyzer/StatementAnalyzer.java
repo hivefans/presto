@@ -43,6 +43,7 @@ import com.facebook.presto.sql.tree.AddColumn;
 import com.facebook.presto.sql.tree.AliasedRelation;
 import com.facebook.presto.sql.tree.AllColumns;
 import com.facebook.presto.sql.tree.Call;
+import com.facebook.presto.sql.tree.CommentTable;
 import com.facebook.presto.sql.tree.Commit;
 import com.facebook.presto.sql.tree.ComparisonExpression;
 import com.facebook.presto.sql.tree.CreateSchema;
@@ -498,6 +499,12 @@ class StatementAnalyzer
 
         @Override
         protected Scope visitRenameTable(RenameTable node, Optional<Scope> scope)
+        {
+            return createAndAssignScope(node, scope);
+        }
+
+        @Override
+        protected Scope visitCommentTable(CommentTable node, Optional<Scope> scope)
         {
             return createAndAssignScope(node, scope);
         }

@@ -16,6 +16,7 @@ package com.facebook.presto.verifier;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.parser.SqlParserOptions;
 import com.facebook.presto.sql.tree.AddColumn;
+import com.facebook.presto.sql.tree.CommentTable;
 import com.facebook.presto.sql.tree.CreateTable;
 import com.facebook.presto.sql.tree.CreateTableAsSelect;
 import com.facebook.presto.sql.tree.CreateView;
@@ -322,6 +323,9 @@ public class PrestoVerifier
             return MODIFY;
         }
         if (statement instanceof RenameTable) {
+            return MODIFY;
+        }
+        if (statement instanceof CommentTable) {
             return MODIFY;
         }
         if (statement instanceof ShowCatalogs) {

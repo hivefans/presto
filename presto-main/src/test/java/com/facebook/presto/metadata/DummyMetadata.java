@@ -181,6 +181,12 @@ public class DummyMetadata
     }
 
     @Override
+    public void addComment(Session session, TableHandle tableHandle, String comment)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void renameColumn(Session session, TableHandle tableHandle, ColumnHandle source, String target)
     {
         throw new UnsupportedOperationException();

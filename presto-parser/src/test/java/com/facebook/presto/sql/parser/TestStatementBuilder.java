@@ -203,6 +203,7 @@ public class TestStatementBuilder
         printStatement("create table if not exists baz (a timestamp, b varchar)");
         printStatement("create table test (a boolean, b bigint) with (a = 'apple', b = 'banana')");
         printStatement("create table test (a boolean, b bigint) comment 'test' with (a = 'apple')");
+        printStatement("comment on table test is 'test'");
         printStatement("drop table test");
 
         printStatement("create view foo as with a as (select 123) select * from a");

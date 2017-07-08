@@ -51,6 +51,11 @@ public class AllowAllAccessControl
     }
 
     @Override
+    public void checkCanCommentTable(ConnectorTransactionHandle transaction, Identity identity, SchemaTableName tableName)
+    {
+    }
+
+    @Override
     public void checkCanShowTablesMetadata(ConnectorTransactionHandle transactionHandle, Identity identity, String schemaName)
     {
     }

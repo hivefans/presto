@@ -27,6 +27,7 @@ import com.facebook.presto.sql.tree.CallArgument;
 import com.facebook.presto.sql.tree.Cast;
 import com.facebook.presto.sql.tree.CharLiteral;
 import com.facebook.presto.sql.tree.ColumnDefinition;
+import com.facebook.presto.sql.tree.CommentTable;
 import com.facebook.presto.sql.tree.Commit;
 import com.facebook.presto.sql.tree.ComparisonExpression;
 import com.facebook.presto.sql.tree.ComparisonExpressionType;
@@ -1440,6 +1441,14 @@ public class TestSqlParser
             throws Exception
     {
         assertStatement("ALTER TABLE a RENAME TO b", new RenameTable(QualifiedName.of("a"), QualifiedName.of("b")));
+    }
+
+    @Test
+    public void testCommentTable()
+            throws Exception
+    {
+        assertStatement("COMMENT ON TABLE a IS 'test'", new CommentTable(QualifiedName.of("a"), "test"));
+        assertStatement("COMMENT ON TABLE a IS ''", new CommentTable(QualifiedName.of("a"), ""));
     }
 
     @Test
