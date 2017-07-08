@@ -21,6 +21,7 @@ public class LegacySecurityConfig
     private boolean allowAddColumn;
     private boolean allowDropTable;
     private boolean allowRenameTable;
+    private boolean allowCommentTable;
     private boolean allowRenameColumn;
 
     public boolean getAllowAddColumn()
@@ -59,6 +60,19 @@ public class LegacySecurityConfig
     public LegacySecurityConfig setAllowRenameTable(boolean allowRenameTable)
     {
         this.allowRenameTable = allowRenameTable;
+        return this;
+    }
+
+    public boolean getAllowCommentTable()
+    {
+        return this.allowCommentTable;
+    }
+
+    @Config("hive.allow-comment-table")
+    @ConfigDescription("Allow Hive connector to add comment to a table")
+    public LegacySecurityConfig setAllowCommentTable(boolean allowCommentTable)
+    {
+        this.allowCommentTable = allowCommentTable;
         return this;
     }
 

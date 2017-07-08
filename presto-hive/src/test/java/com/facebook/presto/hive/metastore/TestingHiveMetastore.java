@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.facebook.presto.hive.HiveErrorCode.HIVE_METASTORE_ERROR;
+import static com.facebook.presto.hive.HiveMetadata.TABLE_COMMENT;
 import static com.facebook.presto.hive.HiveUtil.toPartitionValues;
 import static com.facebook.presto.hive.metastore.Database.DEFAULT_DATABASE_NAME;
 import static com.facebook.presto.hive.metastore.HivePrivilegeInfo.HivePrivilege.OWNERSHIP;
@@ -301,6 +302,19 @@ public class TestingHiveMetastore
                         privileges);
             }
         }
+    }
+
+    @Override
+    public synchronized void commentTable(String databaseName, String tableName, String comment)
+    {
+        SchemaTableName name = new SchemaTableName(databaseName, tableName);
+        Table oldTable = getRequiredTable(name);
+        Map<String, String> parameters = oldTable.getParameters();
+        parameters.put(TABLE_COMMENT, comment);
+        Table newTable = Table.builder(oldTable)
+                .setParameters(ImmutableMap.copyOf(parameters))
+                .build();
+        relations.put(name, newTable);
     }
 
     @Override
