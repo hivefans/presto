@@ -1323,11 +1323,14 @@ public class TestSqlParser
     {
         Query query = simpleQuery(selectList(new AllColumns()), table(QualifiedName.of("t")));
         Query querySelectColumn = simpleQuery(selectList(new Identifier("a")), table(QualifiedName.of("t")));
+        Query querySelectSpaceColumn = simpleQuery(selectList(new Identifier("a b c")), table(QualifiedName.of("t")));
         Query querySelectColumns = simpleQuery(selectList(new Identifier("a"), new Identifier("b")), table(QualifiedName.of("t")));
         QualifiedName table = QualifiedName.of("foo");
 
         assertStatement("CREATE TABLE foo AS SELECT * FROM t",
                 new CreateTableAsSelect(table, query, false, ImmutableMap.of(), true, Optional.empty(), Optional.empty()));
+        assertStatement("CREATE TABLE foo AS SELECT \"a b c\" FROM t",
+                new CreateTableAsSelect(table, querySelectSpaceColumn, false, ImmutableMap.of(), true, Optional.empty(), Optional.empty()));
         assertStatement("CREATE TABLE foo(x) AS SELECT a FROM t",
                 new CreateTableAsSelect(table, querySelectColumn, false, ImmutableMap.of(), true, Optional.of(ImmutableList.of(new Identifier("x"))), Optional.empty()));
         assertStatement("CREATE TABLE foo(x,y) AS SELECT a,b FROM t",
@@ -1335,6 +1338,8 @@ public class TestSqlParser
 
         assertStatement("CREATE TABLE IF NOT EXISTS foo AS SELECT * FROM t",
                 new CreateTableAsSelect(table, query, true, ImmutableMap.of(), true, Optional.empty(), Optional.empty()));
+        assertStatement("CREATE TABLE IF NOT EXISTS foo AS SELECT \"a b c\" FROM t",
+                new CreateTableAsSelect(table, querySelectSpaceColumn, true, ImmutableMap.of(), true, Optional.empty(), Optional.empty()));
         assertStatement("CREATE TABLE IF NOT EXISTS foo(x) AS SELECT a FROM t",
                 new CreateTableAsSelect(table, querySelectColumn, true, ImmutableMap.of(), true, Optional.of(ImmutableList.of(new Identifier("x"))), Optional.empty()));
         assertStatement("CREATE TABLE IF NOT EXISTS foo(x,y) AS SELECT a,b FROM t",
@@ -1342,6 +1347,8 @@ public class TestSqlParser
 
         assertStatement("CREATE TABLE foo AS SELECT * FROM t WITH NO DATA",
                 new CreateTableAsSelect(table, query, false, ImmutableMap.of(), false, Optional.empty(), Optional.empty()));
+        assertStatement("CREATE TABLE foo AS SELECT \"a b c\" FROM t WITH NO DATA",
+                new CreateTableAsSelect(table, querySelectSpaceColumn, false, ImmutableMap.of(), false, Optional.empty(), Optional.empty()));
         assertStatement("CREATE TABLE foo(x) AS SELECT a FROM t WITH NO DATA",
                 new CreateTableAsSelect(table, querySelectColumn, false, ImmutableMap.of(), false, Optional.of(ImmutableList.of(new Identifier("x"))), Optional.empty()));
         assertStatement("CREATE TABLE foo(x,y) AS SELECT a,b FROM t WITH NO DATA",

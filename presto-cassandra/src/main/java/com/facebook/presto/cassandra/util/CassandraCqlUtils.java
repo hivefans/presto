@@ -79,6 +79,10 @@ public final class CassandraCqlUtils
         if (keywords.contains(identifier.toUpperCase(ENGLISH))) {
             return quoteIdentifier(identifier);
         }
+
+        if (identifier.contains(" ")) {
+            return quoteIdentifier(identifier);
+        }
         return identifier;
     }
 

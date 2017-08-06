@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.facebook.presto.cassandra.CassandraType.toCassandraType;
+import static com.facebook.presto.cassandra.util.CassandraCqlUtils.validColumnName;
 import static com.facebook.presto.cassandra.util.CassandraCqlUtils.validSchemaName;
 import static com.facebook.presto.cassandra.util.CassandraCqlUtils.validTableName;
 import static com.facebook.presto.spi.StandardErrorCode.NOT_SUPPORTED;
@@ -58,6 +59,7 @@ import static com.facebook.presto.spi.StandardErrorCode.PERMISSION_DENIED;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
 import static java.util.Locale.ENGLISH;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -257,7 +259,7 @@ public class CassandraMetadata
         String schemaName = cassandraTableHandle.getSchemaName();
         String tableName = cassandraTableHandle.getTableName();
 
-        cassandraSession.execute(String.format("DROP TABLE \"%s\".\"%s\"", schemaName, tableName));
+        cassandraSession.execute(format("DROP TABLE \"%s\".\"%s\"", schemaName, tableName));
     }
 
     @Override
@@ -274,9 +276,10 @@ public class CassandraMetadata
         ImmutableList.Builder<ExtraColumnMetadata> columnExtra = ImmutableList.builder();
         columnExtra.add(new ExtraColumnMetadata("id", true));
         for (ColumnMetadata column : tableMetadata.getColumns()) {
-            columnNames.add(column.getName());
+            String columnName = validColumnName(column.getName());
+            columnNames.add(columnName);
             columnTypes.add(column.getType());
-            columnExtra.add(new ExtraColumnMetadata(column.getName(), column.isHidden()));
+            columnExtra.add(new ExtraColumnMetadata(columnName, column.isHidden()));
         }
 
         // get the root directory for the database
@@ -285,7 +288,7 @@ public class CassandraMetadata
         String tableName = table.getTableName();
         List<String> columns = columnNames.build();
         List<Type> types = columnTypes.build();
-        StringBuilder queryBuilder = new StringBuilder(String.format("CREATE TABLE \"%s\".\"%s\"(id uuid primary key", schemaName, tableName));
+        StringBuilder queryBuilder = new StringBuilder(format("CREATE TABLE \"%s\".\"%s\"(id uuid primary key", schemaName, tableName));
         for (int i = 0; i < columns.size(); i++) {
             String name = columns.get(i);
             Type type = types.get(i);

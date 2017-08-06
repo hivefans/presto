@@ -135,6 +135,15 @@ public abstract class AbstractTestIntegrationSmokeTest
     }
 
     @Test
+    public void testCreateTableAsColumnContainSpace()
+            throws Exception
+    {
+        assertUpdate("CREATE TABLE table_contain_space AS SELECT 1 as \"a b c\"", 1);
+        assertQuery("SELECT * FROM table_contain_space", "SELECT 1");
+        assertUpdate("DROP TABLE table_contain_space");
+    }
+
+    @Test
     public void testDuplicatedRowCreateTable()
     {
         assertQueryFails("CREATE TABLE test (a integer, a integer)",

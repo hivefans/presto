@@ -41,6 +41,13 @@ public class TestRedisIntegrationSmokeTest
         this.embeddedRedis = embeddedRedis;
     }
 
+    @Override
+    public void testCreateTableAsColumnContainSpace()
+            throws Exception
+    {
+        assertQueryFails("CREATE TABLE table_contain_space AS SELECT 1 as \"a b c\"",
+                "This connector does not support creating tables with data");
+    }
     @AfterClass(alwaysRun = true)
     public void destroy()
     {

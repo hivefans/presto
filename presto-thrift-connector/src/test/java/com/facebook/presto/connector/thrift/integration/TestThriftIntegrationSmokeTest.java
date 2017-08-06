@@ -41,4 +41,12 @@ public class TestThriftIntegrationSmokeTest
                 .row("sf1");
         assertContains(actualSchemas, resultBuilder.build());
     }
+
+    @Override
+    public void testCreateTableAsColumnContainSpace()
+            throws Exception
+    {
+        assertQueryFails("CREATE TABLE table_contain_space AS SELECT 1 as \"a b c\"",
+                "This connector does not support creating tables with data");
+    }
 }
