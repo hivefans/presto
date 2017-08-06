@@ -13,12 +13,14 @@
  */
 package com.facebook.presto.cassandra;
 
+import com.datastax.driver.core.AbstractTableMetadata;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.IndexMetadata;
 import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.MaterializedViewMetadata;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
@@ -171,6 +173,9 @@ public class NativeCassandraSession
         for (TableMetadata table : keyspace.getTables()) {
             builder.add(table.getName());
         }
+        for (MaterializedViewMetadata materializedView : keyspace.getMaterializedViews()) {
+            builder.add(materializedView.getName());
+        }
         return builder.build();
     }
 
@@ -179,7 +184,7 @@ public class NativeCassandraSession
             throws TableNotFoundException
     {
         KeyspaceMetadata keyspace = getKeyspaceByCaseInsensitiveName(schemaTableName.getSchemaName());
-        TableMetadata tableMeta = getTableMetadata(keyspace, schemaTableName.getTableName());
+        AbstractTableMetadata tableMeta = getTableMetadata(keyspace, schemaTableName.getTableName());
 
         List<String> columnNames = new ArrayList<>();
         List<ColumnMetadata> columns = tableMeta.getColumns();
@@ -266,13 +271,15 @@ public class NativeCassandraSession
         return result;
     }
 
-    private static TableMetadata getTableMetadata(KeyspaceMetadata keyspace, String caseInsensitiveTableName)
+    private static AbstractTableMetadata getTableMetadata(KeyspaceMetadata keyspace, String caseInsensitiveTableName)
     {
-        TableMetadata result = null;
-        Collection<TableMetadata> tables = keyspace.getTables();
+        AbstractTableMetadata result = null;
+        Collection<AbstractTableMetadata> tables = new ArrayList<>();
+        tables.addAll(keyspace.getTables());
+        tables.addAll(keyspace.getMaterializedViews());
         // Ensure that the error message is deterministic
-        List<TableMetadata> sortedTables = Ordering.from(comparing(TableMetadata::getName)).immutableSortedCopy(tables);
-        for (TableMetadata table : sortedTables) {
+        List<AbstractTableMetadata> sortedTables = Ordering.from(comparing(AbstractTableMetadata::getName)).immutableSortedCopy(tables);
+        for (AbstractTableMetadata table : sortedTables) {
             if (table.getName().equalsIgnoreCase(caseInsensitiveTableName)) {
                 if (result != null) {
                     throw new PrestoException(
@@ -287,6 +294,12 @@ public class NativeCassandraSession
             throw new TableNotFoundException(new SchemaTableName(keyspace.getName(), caseInsensitiveTableName));
         }
         return result;
+    }
+
+    public boolean isMaterializedView(String caseInsensitiveSchemaName, String caseInsensitiveTableName)
+    {
+        KeyspaceMetadata keyspace = getKeyspaceByCaseInsensitiveName(caseInsensitiveSchemaName);
+        return keyspace.getMaterializedView(caseInsensitiveTableName) != null;
     }
 
     private static void checkColumnNames(List<ColumnMetadata> columns)
@@ -304,7 +317,7 @@ public class NativeCassandraSession
         }
     }
 
-    private CassandraColumnHandle buildColumnHandle(TableMetadata tableMetadata, ColumnMetadata columnMeta, boolean partitionKey, boolean clusteringKey, int ordinalPosition, boolean hidden)
+    private CassandraColumnHandle buildColumnHandle(AbstractTableMetadata tableMetadata, ColumnMetadata columnMeta, boolean partitionKey, boolean clusteringKey, int ordinalPosition, boolean hidden)
     {
         CassandraType cassandraType = CassandraType.getCassandraType(columnMeta.getType().getName());
         List<CassandraType> typeArguments = null;
@@ -322,10 +335,13 @@ public class NativeCassandraSession
             }
         }
         boolean indexed = false;
-        for (IndexMetadata idx : tableMetadata.getIndexes()) {
-            if (idx.getTarget().equals(columnMeta.getName())) {
-                indexed = true;
-                break;
+        if (!isMaterializedView(tableMetadata.getKeyspace().getName(), tableMetadata.getName())) {
+            TableMetadata table = (TableMetadata) tableMetadata;
+            for (IndexMetadata idx : table.getIndexes()) {
+                if (idx.getTarget().equals(columnMeta.getName())) {
+                    indexed = true;
+                    break;
+                }
             }
         }
         return new CassandraColumnHandle(connectorId, columnMeta.getName(), ordinalPosition, cassandraType, typeArguments, partitionKey, clusteringKey, indexed, hidden);
