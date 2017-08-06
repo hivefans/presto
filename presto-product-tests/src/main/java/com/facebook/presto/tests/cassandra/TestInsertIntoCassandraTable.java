@@ -18,6 +18,7 @@ import com.teradata.tempto.Requirement;
 import com.teradata.tempto.RequirementsProvider;
 import com.teradata.tempto.configuration.Configuration;
 import com.teradata.tempto.internal.fulfillment.table.TableName;
+import com.teradata.tempto.internal.query.CassandraQueryExecutor;
 import com.teradata.tempto.query.QueryResult;
 import io.airlift.units.Duration;
 import org.testng.annotations.Test;
@@ -43,10 +44,14 @@ public class TestInsertIntoCassandraTable
         implements RequirementsProvider
 {
     private static final String CASSANDRA_INSERT_TABLE = "Insert_All_Types";
+    private static final String CASSANDRA_MATERIALIZED_VIEW = "Insert_All_Types_Mview";
+
+    private CassandraQueryExecutor queryExecutor;
 
     @Override
     public Requirement getRequirements(Configuration configuration)
     {
+        queryExecutor = new CassandraQueryExecutor(configuration);
         return mutableTable(CASSANDRA_ALL_TYPES, CASSANDRA_INSERT_TABLE, CREATED);
     }
 
@@ -125,5 +130,33 @@ public class TestInsertIntoCassandraTable
         // negative test: failed to insert null to primary key
         assertThat(() -> query(format("INSERT INTO %s (a) VALUES (null) ", tableNameInDatabase)))
                 .failsWithMessage("Invalid null value in condition for column a");
+    }
+
+    @Test(groups = CASSANDRA)
+    public void testInsertIntoValuesToCassandraMaterizedView()
+            throws Exception
+    {
+        queryExecutor.executeQuery(format("DROP MATERIALIZED VIEW IF EXISTS %s.%s", KEY_SPACE, CASSANDRA_MATERIALIZED_VIEW));
+        queryExecutor.executeQuery(format("CREATE MATERIALIZED VIEW %s.%s AS " +
+                        "SELECT * FROM %s.%s " +
+                        "WHERE b IS NOT NULL " +
+                        "PRIMARY KEY (a, b) " +
+                        "WITH CLUSTERING ORDER BY (integer DESC)",
+                KEY_SPACE,
+                CASSANDRA_MATERIALIZED_VIEW,
+                KEY_SPACE,
+                CASSANDRA_ALL_TYPES.getName()));
+
+        assertContainsEventually(() -> query(format("SHOW TABLES FROM %s.%s", CONNECTOR_NAME, KEY_SPACE)),
+                query(format("SELECT lower('%s')", CASSANDRA_MATERIALIZED_VIEW)),
+                new Duration(1, MINUTES));
+
+        assertThat(() -> query(format("INSERT INTO %s.%s.%s (a) VALUES (null) ", CONNECTOR_NAME, KEY_SPACE, CASSANDRA_MATERIALIZED_VIEW)))
+                .failsWithMessage("Inserting into materialized views not yet supported");
+
+        assertThat(() -> query(format("DROP TABLE %s.%s.%s", CONNECTOR_NAME, KEY_SPACE, CASSANDRA_MATERIALIZED_VIEW)))
+                .failsWithMessage("Dropping materialized views not yet supported");
+
+        queryExecutor.executeQuery(format("DROP MATERIALIZED VIEW IF EXISTS %s.%s", KEY_SPACE, CASSANDRA_MATERIALIZED_VIEW));
     }
 }

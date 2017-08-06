@@ -257,6 +257,10 @@ public class CassandraMetadata
         String schemaName = cassandraTableHandle.getSchemaName();
         String tableName = cassandraTableHandle.getTableName();
 
+        if (cassandraSession.isMaterializedView(schemaName, tableName)) {
+            throw new PrestoException(NOT_SUPPORTED, "Dropping materialized views not yet supported");
+        }
+
         cassandraSession.execute(String.format("DROP TABLE \"%s\".\"%s\"", schemaName, tableName));
     }
 
@@ -320,6 +324,10 @@ public class CassandraMetadata
     public ConnectorInsertTableHandle beginInsert(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
         CassandraTableHandle table = (CassandraTableHandle) tableHandle;
+        if (cassandraSession.isMaterializedView(table.getSchemaName(), table.getTableName())) {
+            throw new PrestoException(NOT_SUPPORTED, "Inserting into materialized views not yet supported");
+        }
+
         SchemaTableName schemaTableName = new SchemaTableName(table.getSchemaName(), table.getTableName());
         List<CassandraColumnHandle> columns = cassandraSession.getTable(schemaTableName).getColumns();
         List<String> columnNames = columns.stream().map(CassandraColumnHandle::getName).map(CassandraCqlUtils::validColumnName).collect(Collectors.toList());
