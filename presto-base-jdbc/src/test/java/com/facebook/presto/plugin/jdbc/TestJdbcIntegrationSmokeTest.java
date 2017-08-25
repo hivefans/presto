@@ -14,6 +14,7 @@
 package com.facebook.presto.plugin.jdbc;
 
 import com.facebook.presto.tests.AbstractTestIntegrationSmokeTest;
+import org.testng.annotations.Test;
 
 import static com.facebook.presto.plugin.jdbc.JdbcQueryRunner.createJdbcQueryRunner;
 import static io.airlift.tpch.TpchTable.ORDERS;
@@ -25,5 +26,13 @@ public class TestJdbcIntegrationSmokeTest
             throws Exception
     {
         super(() -> createJdbcQueryRunner(ORDERS));
+    }
+
+    @Test
+    public void testCreateTableAsColumnContainSpace()
+            throws Exception
+    {
+        assertUpdate("CREATE TABLE table_contain_space AS SELECT 1 as \"a b c\"", 1);
+        assertQuery("SELECT * FROM table_contain_space", "SELECT 1");
     }
 }

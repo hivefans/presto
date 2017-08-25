@@ -147,6 +147,13 @@ public abstract class AbstractTestDistributedQueries
         assertUpdate("DROP TABLE test_create_table_if_not_exists");
         assertFalse(getQueryRunner().tableExists(getSession(), "test_create_table_if_not_exists"));
 
+        assertUpdate("CREATE TABLE test_create_column_contains_space (\"a b c\" bigint)");
+        assertTrue(getQueryRunner().tableExists(getSession(), "test_create_column_contains_space"));
+        assertTableColumnNames("test_create_column_contains_space", "a b c");
+
+        assertUpdate("DROP TABLE test_create_column_contains_space");
+        assertFalse(getQueryRunner().tableExists(getSession(), "test_create_column_contains_space"));
+
         // Test CREATE TABLE LIKE
         assertUpdate("CREATE TABLE test_create_original (a bigint, b double, c varchar)");
         assertTrue(getQueryRunner().tableExists(getSession(), "test_create_original"));
